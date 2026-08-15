@@ -2,7 +2,14 @@
 
 企業向けAI活用研修・コンサルティングで使用する資料。
 
-**成果物：** [`mbti-ai-compatibility.html`](./mbti-ai-compatibility.html)（単一HTMLファイル。外部依存なし／ライト・ダークテーマ対応）
+**成果物**
+
+| ファイル | 用途 |
+|---|---|
+| [`mbti-ai-compatibility.html`](./mbti-ai-compatibility.html) | 画面閲覧・研修投影用。単一HTML、外部依存なし、ライト/ダークテーマ対応 |
+| [`MBTIとAIの関わり_人間とAIの相性を最適化するAI活用.pdf`](./MBTIとAIの関わり_人間とAIの相性を最適化するAI活用.pdf) | 配布・印刷用。A4縦・44ページ・章ごとに改ページ・フッターにページ番号 |
+
+PDFはHTMLから生成しています（`@media print` で章単位の改ページと表の分割抑制を制御）。内容を更新した場合は HTML を編集し、headless Chromium で再出力してください。
 
 ## この資料の位置づけ
 

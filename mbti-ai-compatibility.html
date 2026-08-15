@@ -192,6 +192,70 @@ footer{padding:48px 0 72px; color:var(--ink-3); font-size:12.5px}
 @media(prefers-reduced-motion:no-preference){
   .card{transition:border-color .2s ease}
 }
+
+/* ---------- print / PDF ---------- */
+@media print{
+  :root{
+    --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#EFF3F3; --surface-3:#F7F9F9;
+    --ink:#101618; --ink-2:#3A4D53; --ink-3:#5F7278;
+    --rule:#C9D3D5; --rule-2:#A9B7BA;
+    --ai:#0B5C63; --ai-bg:#E4F1F2; --ai-line:#7FB9BD;
+    --human:#7A4E0C; --human-bg:#F5EAD5; --human-line:#CDA968;
+    --warn:#932F24; --warn-bg:#F8E5E1; --warn-line:#D79E94;
+    --ok:#245C43; --ok-bg:#E1EFE7;
+    --shadow:none;
+  }
+  html,body{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+  body{background:#fff; font-size:9.6pt; line-height:1.72}
+  .wrap{max-width:none; padding:0}
+  .col,.sec-msg,.hero .lede{max-width:none}
+  .card{box-shadow:none}
+  a{color:var(--ink-2); text-decoration:underline}
+
+  /* cover page */
+  .hero{padding:28mm 0 0; background:none; border-bottom:none; min-height:210mm}
+  .hero h1{font-size:27pt}
+  .hero .lede{font-size:11pt; max-width:none}
+  .thesis{font-size:15pt}
+
+  /* one chapter per page */
+  section{break-before:page; padding:0 0 6mm; border-bottom:none}
+  .sec-head{break-after:avoid; margin-bottom:4px}
+  .sec-msg{break-after:avoid}
+  h3,h4{break-after:avoid}
+  .sec-num{font-size:10pt}
+  .sec-head h2{font-size:17pt}
+  .sec-msg{font-size:11pt}
+
+  /* keep blocks intact across pages */
+  .card,.flow-step,.ref,.prompt,.axisbar,.kpi,.tw{break-inside:avoid}
+  tr,thead,tbody tr{break-inside:avoid}
+  thead{display:table-header-group}
+  .flow-arrow{break-inside:avoid; break-after:avoid}
+
+  /* tables must not be clipped on A4 */
+  .tw{overflow:visible; break-inside:auto}
+  table{min-width:0; font-size:8.4pt; line-height:1.6}
+  th,td{padding:6px 8px}
+  thead th{font-size:7.6pt}
+  .small{font-size:9pt} .xsmall{font-size:8pt}
+  .prompt{font-size:8.2pt; line-height:1.65; white-space:pre-wrap}
+  .chip{font-size:7.6pt}
+  .kpi .v{font-size:17pt}
+
+  /* dense grids need tighter columns on A4 */
+  .g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .factors{grid-template-columns:repeat(5,minmax(0,1fr))!important; gap:5px!important}
+  .factors .card{padding:9px 6px!important}
+  .factors .xsmall{font-size:7.2pt}
+  .factors b.k{font-size:8.6pt}
+
+  footer{break-before:page; padding:0}
+  details{break-inside:avoid}
+  details summary{display:none}
+  details[open] summary{display:block}
+}
+
 </style>
 
 <div class="hero">
@@ -1519,7 +1583,7 @@ footer{padding:48px 0 72px; color:var(--ink-3); font-size:12.5px}
 
     <div class="card stack g16">
       <h3 style="text-align:center">AI活用成果の構造</h3>
-      <div class="grid" style="grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; align-items:stretch">
+      <div class="grid factors" style="grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; align-items:stretch">
         <div class="card flat stack g8" style="text-align:center; padding:16px 12px">
           <div class="eyebrow" style="color:var(--ai)">FACTOR 1</div><b class="k">AI性能</b>
           <p class="xsmall">モデルの能力・ツール連携・データ接続</p>
