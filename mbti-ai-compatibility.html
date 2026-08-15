@@ -1,0 +1,1675 @@
+<title>人とAIの相性設計</title>
+<style>
+:root{
+  --bg:#F2F5F5; --surface:#FFFFFF; --surface-2:#E8EEEE; --surface-3:#FAFBFB;
+  --ink:#131A1C; --ink-2:#41555B; --ink-3:#6B7D83;
+  --rule:#D6DEDF; --rule-2:#B9C5C7;
+  --ai:#0F6E75; --ai-bg:#E2F0F1; --ai-line:#8FC4C7;
+  --human:#8A5A12; --human-bg:#F5EAD6; --human-line:#D5B37B;
+  --warn:#A33A2E; --warn-bg:#F8E6E2; --warn-line:#DFAAA0;
+  --ok:#2C6B4F; --ok-bg:#E2EFE8;
+  --shadow:0 1px 2px rgba(19,26,28,.05), 0 8px 24px -16px rgba(19,26,28,.25);
+  --jp-sans:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic Medium","YuGothic","Noto Sans JP","Meiryo",system-ui,sans-serif;
+  --jp-serif:"Hiragino Mincho ProN","Yu Mincho","YuMincho","Noto Serif JP",serif;
+  --mono:ui-monospace,"SFMono-Regular","Menlo","Consolas","Noto Sans Mono",monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1315; --surface:#141C1F; --surface-2:#1B2528; --surface-3:#111819;
+    --ink:#E7EDEE; --ink-2:#A9B9BD; --ink-3:#7E9095;
+    --rule:#253134; --rule-2:#37484C;
+    --ai:#5CBCC1; --ai-bg:#0F2C2E; --ai-line:#2C6165;
+    --human:#DDA94B; --human-bg:#2B2211; --human-line:#5E4A22;
+    --warn:#E4897A; --warn-bg:#301A16; --warn-line:#6B3B33;
+    --ok:#6FBF95; --ok-bg:#132A20;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1315; --surface:#141C1F; --surface-2:#1B2528; --surface-3:#111819;
+  --ink:#E7EDEE; --ink-2:#A9B9BD; --ink-3:#7E9095;
+  --rule:#253134; --rule-2:#37484C;
+  --ai:#5CBCC1; --ai-bg:#0F2C2E; --ai-line:#2C6165;
+  --human:#DDA94B; --human-bg:#2B2211; --human-line:#5E4A22;
+  --warn:#E4897A; --warn-bg:#301A16; --warn-line:#6B3B33;
+  --ok:#6FBF95; --ok-bg:#132A20;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:var(--jp-sans); font-size:16px; line-height:1.85;
+  -webkit-font-smoothing:antialiased; font-feature-settings:"palt" 1;
+}
+.wrap{max-width:1120px; margin:0 auto; padding:0 24px}
+.col{max-width:68ch}
+h1,h2,h3,h4{text-wrap:balance; line-height:1.4; margin:0}
+a{color:var(--ai); text-underline-offset:3px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--ai); outline-offset:3px; border-radius:3px}
+p{margin:0}
+.stack{display:flex; flex-direction:column}
+.g8{gap:8px}.g10{gap:10px}.g12{gap:12px}.g16{gap:16px}.g20{gap:20px}.g28{gap:28px}.g40{gap:40px}
+
+/* ---------- hero ---------- */
+.hero{
+  border-bottom:1px solid var(--rule);
+  background:
+    linear-gradient(180deg,var(--surface-3),var(--bg));
+  padding:72px 0 56px;
+}
+.eyebrow{
+  font-family:var(--mono); font-size:11.5px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--ink-3);
+}
+.hero h1{
+  font-size:clamp(30px,5.2vw,52px); font-weight:800; letter-spacing:-.02em; line-height:1.28;
+}
+.hero .lede{font-size:clamp(16px,2vw,19px); color:var(--ink-2); max-width:60ch}
+.thesis{
+  font-family:var(--jp-serif); font-size:clamp(18px,2.6vw,25px); line-height:1.7;
+  border-left:3px solid var(--ai); padding:4px 0 4px 20px; color:var(--ink);
+}
+.thesis b{color:var(--ai); font-weight:700}
+.metabar{
+  display:flex; flex-wrap:wrap; gap:8px 28px; font-family:var(--mono); font-size:11.5px;
+  color:var(--ink-3); letter-spacing:.06em; border-top:1px solid var(--rule); padding-top:16px;
+}
+
+/* ---------- section frame ---------- */
+section{padding:56px 0; border-bottom:1px solid var(--rule)}
+.sec-head{display:flex; gap:20px; align-items:baseline; margin-bottom:8px}
+.sec-num{
+  font-family:var(--mono); font-size:13px; font-weight:600; color:var(--ai);
+  border:1px solid var(--ai-line); background:var(--ai-bg); border-radius:2px;
+  padding:2px 8px; flex:none; letter-spacing:.08em;
+}
+.sec-head h2{font-size:clamp(22px,3.2vw,31px); font-weight:800; letter-spacing:-.015em}
+.sec-msg{
+  font-family:var(--jp-serif); font-size:clamp(16px,2vw,19px); color:var(--ink-2);
+  margin:6px 0 4px; padding-left:0; max-width:64ch;
+}
+h3{font-size:19px; font-weight:700; margin-top:8px; letter-spacing:-.01em}
+h4{font-size:15px; font-weight:700; letter-spacing:.01em}
+.muted{color:var(--ink-2)}
+.small{font-size:13.5px; line-height:1.75}
+.xsmall{font-size:12.5px; line-height:1.7; color:var(--ink-3)}
+
+/* ---------- epistemic chips ---------- */
+.chip{
+  display:inline-flex; align-items:center; gap:5px; flex:none;
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; font-weight:600;
+  padding:2px 7px; border-radius:2px; border:1px solid; white-space:nowrap; line-height:1.6;
+}
+.chip.ev{color:var(--ai); background:var(--ai-bg); border-color:var(--ai-line)}
+.chip.hy{color:var(--human); background:var(--human-bg); border-color:var(--human-line); border-style:dashed}
+.chip.lim{color:var(--warn); background:var(--warn-bg); border-color:var(--warn-line)}
+.chip.act{color:var(--ok); background:var(--ok-bg); border-color:var(--ok)}
+.chip.neu{color:var(--ink-3); background:var(--surface-2); border-color:var(--rule-2)}
+
+/* ---------- cards / boxes ---------- */
+.card{
+  background:var(--surface); border:1px solid var(--rule); border-radius:4px;
+  padding:20px 22px; box-shadow:var(--shadow);
+}
+.card.flat{box-shadow:none}
+.card.ev{border-left:3px solid var(--ai)}
+.card.hy{border-left:3px solid var(--human-line)}
+.card.warn{border-left:3px solid var(--warn); background:var(--warn-bg)}
+.card.note{background:var(--surface-2); border-style:solid}
+.grid{display:grid; gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:900px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+/* ---------- tables ---------- */
+.tw{overflow-x:auto; border:1px solid var(--rule); border-radius:4px; background:var(--surface)}
+table{border-collapse:collapse; width:100%; min-width:640px; font-size:13.5px; line-height:1.7}
+th,td{text-align:left; padding:11px 14px; border-bottom:1px solid var(--rule); vertical-align:top}
+thead th{
+  background:var(--surface-2); font-size:11.5px; font-family:var(--mono); letter-spacing:.08em;
+  color:var(--ink-2); font-weight:600; text-transform:uppercase; white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:none}
+td.num{font-variant-numeric:tabular-nums; font-family:var(--mono); white-space:nowrap}
+th.w-axis{width:16%}
+caption{caption-side:bottom; text-align:left; padding:10px 14px; font-size:12px; color:var(--ink-3)}
+
+/* ---------- prompt block ---------- */
+.prompt{
+  font-family:var(--mono); font-size:12.5px; line-height:1.8; background:var(--surface-3);
+  border:1px solid var(--rule); border-radius:3px; padding:12px 14px; color:var(--ink-2);
+  white-space:pre-wrap; overflow-x:auto;
+}
+.prompt b{color:var(--ink); font-weight:600}
+
+/* ---------- flow / diagram ---------- */
+.flow{display:flex; flex-direction:column; gap:0; align-items:stretch}
+.flow-step{
+  display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:start;
+  border:1px solid var(--rule); border-radius:4px; background:var(--surface); padding:14px 18px;
+}
+.flow-arrow{
+  height:22px; width:1px; background:var(--rule-2); margin:0 auto; position:relative;
+}
+.flow-arrow::after{
+  content:""; position:absolute; bottom:0; left:50%; transform:translateX(-50%);
+  border-left:4px solid transparent; border-right:4px solid transparent; border-top:6px solid var(--rule-2);
+}
+.flow-k{font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.1em; padding-top:4px}
+.axisbar{
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px;
+  border:1px solid var(--rule); border-radius:3px; padding:10px 14px; background:var(--surface);
+}
+.axisbar .pole{font-weight:700; font-size:14px}
+.axisbar .mid{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+.legend{display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center}
+.kpi{display:flex; flex-direction:column; gap:2px}
+.kpi .v{font-family:var(--mono); font-size:26px; font-weight:700; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+.kpi .l{font-size:12.5px; color:var(--ink-2); line-height:1.5}
+.kpi.ai .v{color:var(--ai)} .kpi.hu .v{color:var(--human)} .kpi.wn .v{color:var(--warn)}
+
+/* meter for correlation strength */
+.meter{height:6px; background:var(--surface-2); border-radius:99px; overflow:hidden; min-width:80px}
+.meter i{display:block; height:100%; background:var(--ai); border-radius:99px}
+.meter.wn i{background:var(--warn)}
+
+ul,ol{margin:0; padding-left:1.2em}
+li{margin:3px 0}
+li::marker{color:var(--ink-3)}
+.tight li{margin:1px 0}
+hr{border:none; border-top:1px solid var(--rule); margin:0}
+b.k{color:var(--ink); font-weight:700}
+.pill-row{display:flex; flex-wrap:wrap; gap:6px}
+details{border:1px solid var(--rule); border-radius:4px; background:var(--surface); padding:12px 16px}
+summary{cursor:pointer; font-weight:700; font-size:14px}
+details[open] summary{margin-bottom:10px}
+.ref{font-size:13px; line-height:1.75; padding:12px 0; border-bottom:1px solid var(--rule); display:grid; grid-template-columns:120px 1fr; gap:16px}
+.ref .rid{font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.06em}
+@media(max-width:640px){.ref{grid-template-columns:1fr; gap:4px}}
+footer{padding:48px 0 72px; color:var(--ink-3); font-size:12.5px}
+@media(prefers-reduced-motion:no-preference){
+  .card{transition:border-color .2s ease}
+}
+</style>
+
+<div class="hero">
+  <div class="wrap stack g20">
+    <div class="eyebrow">企業向け AI活用研修 ／ コンサルティング資料</div>
+    <h1>MBTIとAIの関わり<br>人間とAIの相性を最適化するAI活用</h1>
+    <p class="lede">同じAIを、同じ会社で、同じ業務に使っても、成果には大きな差が出ます。差を生んでいるのはAIの性能ではなく、<b class="k">「その人がAIとどう関わるか」</b>の設計です。この資料は、MBTIを入口に個人差を言語化し、Big Fiveと最新研究で裏づけ、AIリテラシーとプロンプト設計に接続するための教材です。</p>
+    <div class="thesis">AIの性能を最大化するのではなく、<br><b>人間とAIの「相性」を最大化する。</b></div>
+    <div class="metabar">
+      <span>作成 2026年8月</span>
+      <span>全12章 ＋ 参考文献</span>
+      <span>想定 90〜180分研修 ／ 読み物としても使用可</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<section id="legend">
+  <div class="sec-head"><span class="sec-num">凡例</span><h2>この資料の読み方 ― 事実と仮説を混ぜない</h2></div>
+  <p class="sec-msg">AI活用の世界には「根拠のある話」と「もっともらしいだけの話」が混在しています。この資料では、記述の性格をすべてラベルで明示します。</p>
+  <div class="grid g4" style="margin-top:20px">
+    <div class="card flat stack g8"><span class="chip ev">研究</span>
+      <p class="small">査読論文・公的調査・一次データにもとづく記述。研究者／機関・年・内容・分かったことを併記します。</p></div>
+    <div class="card flat stack g8"><span class="chip hy">仮説</span>
+      <p class="small">研究から論理的に導いた、<b class="k">実務上の作業仮説</b>。科学的に検証済みの事実ではありません。現場で試し、合わなければ捨ててください。</p></div>
+    <div class="card flat stack g8"><span class="chip lim">限界</span>
+      <p class="small">その主張がどこまでしか言えないか。サンプル数、相関と因果、再現性、対象集団の偏りなど。</p></div>
+    <div class="card flat stack g8"><span class="chip act">実務</span>
+      <p class="small">明日から使える手順・チェックリスト・プロンプト。研修後の実装対象。</p></div>
+  </div>
+  <div class="card warn stack g8" style="margin-top:20px">
+    <span class="chip lim">前提</span>
+    <p class="small"><b class="k">この資料は「MBTIで人を分類する資料」ではありません。</b>第5章の16タイプ別活用法を含め、MBTIに関する活用論はすべて<span class="chip hy">仮説</span>です。MBTIは能力・適性・成果を測る道具ではなく、「タイプによってAI活用能力が決まる」という主張はこの資料のどこにも含まれません。MBTIはあくまで<b class="k">自己理解と対話のための共通言語</b>として使い、意思決定の根拠にはBig Fiveの研究知見と各人の実際の行動データを置いてください。</p>
+  </div>
+</section>
+
+<section id="s1">
+  <div class="sec-head"><span class="sec-num">01</span><h2>AIと人間の関係が変化している背景</h2></div>
+  <p class="sec-msg">AIは「調べる道具」から「一緒に仕事を進める相手」へ変わった。相手になった瞬間、<b class="k">相性</b>という変数が発生する。</p>
+
+  <div class="stack g28" style="margin-top:24px">
+
+    <div>
+      <h3>1-1. 普及は「特別なスキル」から「日常の前提」へ</h3>
+      <div class="grid g4" style="margin-top:14px">
+        <div class="card flat kpi ai"><span class="v">約50%</span><span class="l">米国の被雇用者のうち、業務で少なくとも年数回AIを使う人の割合（Gallup, 2026年2月／約24,000人）。2023年半ばは21%。</span></div>
+        <div class="card flat kpi ai"><span class="v">13%</span><span class="l">同調査で「毎日」AIを使う人の割合。日常業務に組み込んでいる層はまだ少数。</span></div>
+        <div class="card flat kpi ai"><span class="v">58%</span><span class="l">世界の被雇用者のうち、業務で定期的・準定期的にAIを使う人の割合（Stanford AI Index）。インド・中国では80%超。</span></div>
+        <div class="card flat kpi hu"><span class="v">52 : 45</span><span class="l">Claude上の会話における<b class="k">拡張（Augmentation）</b>と<b class="k">自動化（Automation）</b>の比率（Anthropic Economic Index, 2025年11月データ）。</span></div>
+      </div>
+      <p class="xsmall" style="margin-top:10px"><span class="chip lim">限界</span> 普及率の数値は調査主体・設問・対象国で大きく変わります（「使ったことがある」と「業務で常用している」は別物）。社内説得に使う際は必ず出典と設問文をセットで示してください。</p>
+    </div>
+
+    <div>
+      <h3>1-2. 関係の変化 ― 4つの段階</h3>
+      <p class="small muted" style="margin-top:6px">多くの組織は第2段階で止まっています。相性の設計が効いてくるのは第3段階以降です。</p>
+      <div class="flow" style="margin-top:14px">
+        <div class="flow-step"><span class="flow-k">STAGE 1</span><div><b class="k">検索の代替</b>　「〇〇とは？」を聞く。答えの正誤だけが問題。人による差はほとんど出ない。</div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step"><span class="flow-k">STAGE 2</span><div><b class="k">作業の代行</b>　議事録要約、メール下書き、翻訳。時短効果は出るが、成果の上限は「元々やっていた作業」に固定される。</div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step" style="border-color:var(--ai-line); background:var(--ai-bg)"><span class="flow-k" style="color:var(--ai)">STAGE 3</span><div><b class="k">思考の相棒（協働）</b>　壁打ち、批判、仮説出し、意思決定の整理。<b class="k">ここで初めて「人間側の思考のクセ」が成果に直結する。</b>相性設計が効く領域。</div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step"><span class="flow-k">STAGE 4</span><div><b class="k">仕組みへの組み込み（エージェント）</b>　AIが手順を実行し、人は設計・監督・責任を担う。個人の使い方が業務プロセスの品質そのものになる。</div></div>
+      </div>
+    </div>
+
+    <div>
+      <h3>1-3. なぜ「AI活用に個人差」が生まれるのか</h3>
+      <p class="small muted" style="margin-top:6px">ツールへのアクセスは平等でも、成果は平等になりません。差の発生源は主に4つです。</p>
+      <div class="grid g4" style="margin-top:14px">
+        <div class="card flat stack g8"><h4 style="color:var(--ai)">① 何を任せるかの判断</h4><p class="small">AIに向くタスクを切り出せるか。人が判断すべき領域を手放していないか。<b class="k">タスク選択が成果の大半を決める。</b></p></div>
+        <div class="card flat stack g8"><h4 style="color:var(--ai)">② 情報の渡し方</h4><p class="small">前提・制約・評価基準・出力形式をどこまで書けるか。頭の中の文脈を言語化する習慣の差。</p></div>
+        <div class="card flat stack g8"><h4 style="color:var(--ai)">③ 信頼の置き方</h4><p class="small">疑いすぎて使わない／信じすぎて検証しない。この「信頼の較正（キャリブレーション）」は個人差が大きい。</p></div>
+        <div class="card flat stack g8"><h4 style="color:var(--ai)">④ 対話の続け方</h4><p class="small">1回で終えるか、往復して詰めるか。反論させるか、同意させて終わるか。</p></div>
+      </div>
+      <p class="small" style="margin-top:14px"><span class="chip hy">仮説</span> ①〜④はいずれも<b class="k">技術知識よりも、思考習慣・対人スタイル・不確実性への耐性</b>に近い性質です。だからこそ「性格特性」という切り口が意味を持ちます。</p>
+    </div>
+
+    <div class="card ev stack g12">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap">
+        <span class="chip ev">研究</span>
+        <b class="k">人間＋AIは、常に「最強の組み合わせ」ではない</b>
+      </div>
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">項目</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>研究者／機関</td><td>Michelle Vaccaro, Abdullah Almaatouq, Thomas Malone（MIT）</td></tr>
+          <tr><td>発表年</td><td>2024年（Nature Human Behaviour, 8, 2293–2303）</td></tr>
+          <tr><td>研究内容</td><td>事前登録されたシステマティックレビューとメタ分析。106件の実験研究、370の効果量を統合し、「人間単独」「AI単独」「人間＋AI」の成績を比較。</td></tr>
+          <tr><td>何が分かったのか</td><td>平均すると、<b class="k">人間＋AIの組み合わせは「人間単独」または「AI単独」の良い方より有意に成績が低かった</b>。ただし内訳は一様ではなく、<b class="k">意思決定タスクでは損失、コンテンツ作成タスクでは有意に大きな利得</b>が見られた。また、人間がAIより優れている領域では組み合わせが有利に働き、AIが人間より優れている領域では組み合わせが不利に働いた。</td></tr>
+          <tr><td>この資料での活用</td><td>「AIを導入すれば足し算で強くなる」は誤り。<b class="k">組み合わせ方（誰が・何を・どこまで担うか）の設計こそが成果を決める</b>という、本資料全体の出発点。第12章の掛け算モデルの根拠でもある。</td></tr>
+        </tbody>
+      </table></div>
+      <p class="xsmall"><span class="chip lim">限界</span> 統合対象は実験室的タスクが中心で、長期的な業務や熟練者の使い込みは十分に反映されていません。「協働は無意味」ではなく「無設計の協働は無意味になりうる」と読むのが妥当です。</p>
+    </div>
+
+  </div>
+</section>
+
+<section id="s2">
+  <div class="sec-head"><span class="sec-num">02</span><h2>MBTIとは何か ― 使える範囲と、使ってはいけない範囲</h2></div>
+  <p class="sec-msg">MBTIは「優劣の測定」ではなく「<b class="k">選好（好み）の指標</b>」。強力な共通言語であると同時に、科学的な限界がはっきりしている道具でもある。</p>
+
+  <div class="stack g28" style="margin-top:24px">
+
+    <div class="col stack g12">
+      <h3>2-1. 基本概要</h3>
+      <p class="small">MBTI（Myers-Briggs Type Indicator）は、C.G.ユングの心理学的タイプ論を土台に、Katharine Cook BriggsとIsabel Briggs Myersが第二次大戦期から開発した自己申告式の指標です。設計思想は明快で、<b class="k">「人には生まれつき得意な情報の受け取り方・決め方があり、違いは優劣ではない」</b>という前提に立ちます。測るのは能力ではなく<b class="k">選好</b>――右利き／左利きのような「どちらが自然か」です。</p>
+      <div class="card note small"><b class="k">重要：MBTIと16Personalitiesは別物です。</b>日本で広く受検されている「16Personalities」は、無料のウェブ性格診断であり、日本MBTI協会・The Myers-Briggs Companyが提供する公式MBTIとは異なるものです。日本MBTI協会は公式に注意喚起を行っており、16PersonalitiesはBig Five（特性論）を土台にした別系統のテストだと説明しています。公式MBTIは有資格者によるフィードバック（対話）とセットで実施され、<b class="k">適職・適性・相性を「診断」する道具ではない</b>と明記されています。社内研修で「MBTIを使う」と言う場合、どちらを指すのかを必ず区別してください。</div>
+    </div>
+
+    <div>
+      <h3>2-2. 4つの軸</h3>
+      <p class="small muted" style="margin-top:6px">各軸は「どちらが優れているか」ではなく「どちらが自然か（エネルギーが要らないか）」を示します。</p>
+      <div class="stack g12" style="margin-top:14px">
+        <div class="axisbar"><div class="pole" style="color:var(--ai)">E ／ 外向 <span class="small muted" style="font-weight:400">― 話しながら考えが整う。外の世界との相互作用で活性化</span></div><div class="mid">注意の向き先</div><div class="pole" style="text-align:right; color:var(--human)"><span class="small muted" style="font-weight:400">内側で考えを練ってから出す。静かな時間で回復 ―</span> 内向 ／ I</div></div>
+        <div class="axisbar"><div class="pole" style="color:var(--ai)">S ／ 感覚 <span class="small muted" style="font-weight:400">― 事実・具体・現実・実績を起点にする</span></div><div class="mid">情報の受け取り方</div><div class="pole" style="text-align:right; color:var(--human)"><span class="small muted" style="font-weight:400">パターン・可能性・意味・将来像を起点にする ―</span> 直観 ／ N</div></div>
+        <div class="axisbar"><div class="pole" style="color:var(--ai)">T ／ 思考 <span class="small muted" style="font-weight:400">― 一貫性・論理・因果で判断する</span></div><div class="mid">判断の仕方</div><div class="pole" style="text-align:right; color:var(--human)"><span class="small muted" style="font-weight:400">価値観・関係者への影響・調和で判断する ―</span> 感情 ／ F</div></div>
+        <div class="axisbar"><div class="pole" style="color:var(--ai)">J ／ 判断 <span class="small muted" style="font-weight:400">― 決めて計画し、区切りをつけたい</span></div><div class="mid">外界への接し方</div><div class="pole" style="text-align:right; color:var(--human)"><span class="small muted" style="font-weight:400">情報を開いたまま、柔軟に対応したい ―</span> 知覚 ／ P</div></div>
+      </div>
+      <p class="xsmall" style="margin-top:12px">※ T/F の「感情」は「感情的」という意味ではなく、<b class="k">価値にもとづく判断（何を大切にするか）</b>を指します。Fの人が非論理的なわけでも、Tの人に感情がないわけでもありません。研修で最も誤解される点です。</p>
+    </div>
+
+    <div>
+      <h3>2-3. 16タイプの考え方</h3>
+      <p class="small muted" style="margin-top:6px">4軸×2極の組み合わせで16通り。ただし本来のタイプ論では、単なる「4文字の足し算」ではなく、心理機能（Ni, Te, Fi, Se…）の<b class="k">優先順位</b>としてタイプを捉えます。</p>
+      <div class="grid g4" style="margin-top:14px">
+        <div class="card flat stack g8"><h4 style="color:var(--ai)">分析家 NT</h4><p class="small">INTJ・INTP・ENTJ・ENTP<br><span class="muted">概念と論理を軸に、仕組みを構想する傾向</span></p></div>
+        <div class="card flat stack g8"><h4 style="color:var(--ai)">外交官 NF</h4><p class="small">INFJ・INFP・ENFJ・ENFP<br><span class="muted">意味と人への影響を軸に、可能性を描く傾向</span></p></div>
+        <div class="card flat stack g8"><h4 style="color:var(--human)">番人 SJ</h4><p class="small">ISTJ・ISFJ・ESTJ・ESFJ<br><span class="muted">事実と責任を軸に、確実に運用する傾向</span></p></div>
+        <div class="card flat stack g8"><h4 style="color:var(--human)">探検家 SP</h4><p class="small">ISTP・ISFP・ESTP・ESFP<br><span class="muted">現実の手応えを軸に、機敏に動く傾向</span></p></div>
+      </div>
+      <p class="xsmall" style="margin-top:12px">※「分析家／外交官／番人／探検家」というグループ名は16Personalities等で普及した呼称です。便宜的な整理として用い、性格の断定に使わないでください。</p>
+    </div>
+
+    <div class="grid g2">
+      <div class="card flat stack g12">
+        <h4 style="color:var(--ok)">2-4. MBTIのメリット（研修で機能する理由）</h4>
+        <ul class="small tight">
+          <li><b class="k">非評価的な共通言語</b>：「優劣」ではなく「違い」として話せるため、心理的安全性を保ったまま個人差を扱える。</li>
+          <li><b class="k">自己理解の入口</b>：「自分は情報を集めきらないと不安」「話しながら考えが整う」といった自覚を言語化しやすい。</li>
+          <li><b class="k">対話のきっかけ</b>：チームで「進め方の好みが違う」と可視化できる。</li>
+          <li><b class="k">受容性の高さ</b>：親しみやすく、抵抗が少ない。導入コストが低い。</li>
+        </ul>
+        <p class="xsmall">つまりMBTIの価値は<b class="k">「測定精度」ではなく「対話装置」</b>としての部分にあります。本資料もその用途に限定して使います。</p>
+      </div>
+      <div class="card warn stack g12">
+        <h4 style="color:var(--warn)">2-5. MBTIの科学的な限界（必ず伝える）</h4>
+        <ul class="small tight">
+          <li><span class="chip ev">研究</span> <b class="k">「タイプ」は連続量を切っただけ</b>：McCrae &amp; Costa（1989）は、MBTIが質的に異なるタイプや真の二分的選好を測っているという見方を支持しなかった。実際の得点分布は中央付近に集中する連続分布であり、境界線の近くにいる人はわずかな差で別タイプに分類される。</li>
+          <li><span class="chip ev">研究</span> <b class="k">再検査で結果が変わる</b>：短期間（数週間）の再受検で相当数が別タイプに分類されるという報告がある（39〜76%という数値が広く引用される）。一方、The Myers-Briggs Company側は各尺度の内的整合性が約.90、15週までの再検査相関が.80超であると反論しており、Capraro &amp; Capraro（2002）のメタ分析も相応の信頼性を報告している。<b class="k">評価は割れている</b>。</li>
+          <li><span class="chip ev">研究</span> <b class="k">予測妥当性が弱い</b>：組織心理学者Adam Grantらは、職務成績・職務満足・キャリア成功などの重要な結果をMBTIが安定して予測しないと批判している。</li>
+          <li><span class="chip lim">限界</span> <b class="k">自己申告バイアス／バーナム効果</b>：自分で選んだ回答から作られた記述は、誰にでも当てはまる曖昧な表現ほど「当たっている」と感じられる。</li>
+          <li><span class="chip lim">限界</span> <b class="k">神経症傾向（情緒安定性）に対応する軸がない</b>。後述の通り、AI利用研究で繰り返し効いてくる変数を、MBTIは構造上取りこぼす。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card warn stack g12">
+      <h4 style="color:var(--warn)">2-6. 誤用の危険性 ― 研修で絶対にやってはいけないこと</h4>
+      <div class="grid g2">
+        <ul class="small tight">
+          <li><b class="k">採用・配置・昇進の判断材料にする</b>（公式MBTIでも明確に禁止されている用途）。</li>
+          <li><b class="k">「あなたは〇〇タイプだからこの仕事は向かない」</b>と能力を断定する。</li>
+          <li><b class="k">相性診断としてチーム編成を決める</b>。</li>
+        </ul>
+        <ul class="small tight">
+          <li><b class="k">本人の同意なくタイプを共有・記録する</b>。</li>
+          <li><b class="k">「Nタイプは戦略、Sタイプは作業」</b>のような役割の固定化。</li>
+          <li><b class="k">AI活用スキルの高低をタイプで説明する</b>（本資料が最も強く否定する使い方）。</li>
+        </ul>
+      </div>
+      <p class="small">タイプは<b class="k">自分について考えるためのレンズ</b>であって、他人を評価するラベルではありません。「私はこういう進め方が楽だと感じる」という一人称の気づきに留めるとき、MBTIは最も安全かつ有効に働きます。</p>
+    </div>
+
+    <div>
+      <h3>2-7. Big Fiveとの違い</h3>
+      <p class="small muted" style="margin-top:6px">実務判断の根拠に使うなら、MBTIではなくBig Five（五因子モデル／OCEAN）の研究知見を参照してください。</p>
+      <div class="tw" style="margin-top:14px"><table>
+        <thead><tr><th style="width:18%">観点</th><th style="width:41%">MBTI</th><th style="width:41%">Big Five（五因子モデル）</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">出自</b></td><td>ユングのタイプ論 ＋ Briggs・Myersによる実務的開発</td><td>語彙アプローチと因子分析による経験的抽出（Costa &amp; McCrae ほか）</td></tr>
+          <tr><td><b class="k">測定の形</b></td><td><b class="k">タイプ（16の箱）</b>。E か I のどちらかに分類</td><td><b class="k">次元（連続的な度合い）</b>。各特性の高低をスコアで表す</td></tr>
+          <tr><td><b class="k">構成要素</b></td><td>E/I・S/N・T/F・J/P の4軸</td><td>開放性・誠実性・外向性・協調性・神経症傾向 の5因子</td></tr>
+          <tr><td><b class="k">再検査信頼性</b></td><td>議論あり（短期の再分類率の高さが批判され、提供側は反論）</td><td>一般に高い。成人期を通じて比較的安定</td></tr>
+          <tr><td><b class="k">予測妥当性</b></td><td>職務成績等への予測力は弱いとの批判が強い</td><td>誠実性が職務成績を、神経症傾向がストレス反応を予測するなど、多数のメタ分析で確立</td></tr>
+          <tr><td><b class="k">学術での扱い</b></td><td>研究の主流ではない</td><td>パーソナリティ研究の事実上の標準</td></tr>
+          <tr><td><b class="k">向いている用途</b></td><td>自己理解、対話、チームの相互理解の<b class="k">きっかけ</b></td><td>研究、予測、施策設計、効果測定の<b class="k">根拠</b></td></tr>
+          <tr><td><b class="k">向かない用途</b></td><td>選抜・配置・成果予測</td><td>親しみやすい対話ツールとしての即時利用（スコア解釈に説明が要る）</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="card ev stack g12">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap"><span class="chip ev">研究</span><b class="k">MBTIの4軸は、Big Fiveの4因子とかなり重なる ― ただし1つ足りない</b></div>
+      <p class="small">McCrae &amp; Costa（1989, Journal of Personality）は、成人468名（男性267名・女性201名、19〜93歳）を対象に、MBTIとNEO Personality Inventory（自己報告＋他者評定）の関係を検証しました。結論は二段構えです。<b class="k">①「真に二分的なタイプ」を測っているという見方は支持されなかった</b>。しかし<b class="k">②4つの指標は、Big Fiveの5因子のうち4つの側面を確かに測っていた</b>。</p>
+      <div class="tw"><table>
+        <thead><tr><th class="w-axis">MBTI軸</th><th style="width:22%">対応するBig Five因子</th><th style="width:12%">相関</th><th style="width:24%">強さ</th><th>実務的な含意</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">E–I</b></td><td>外向性</td><td class="num">r = −.74</td><td><div class="meter"><i style="width:74%"></i></div></td><td>ほぼ同じものを測っている。ここは信頼して使える</td></tr>
+          <tr><td><b class="k">S–N</b></td><td>開放性</td><td class="num">r = .72</td><td><div class="meter"><i style="width:72%"></i></div></td><td>同上。AI活用と最も関係が深い因子でもある</td></tr>
+          <tr><td><b class="k">T–F</b></td><td>協調性</td><td class="num">r = .44</td><td><div class="meter"><i style="width:44%"></i></div></td><td>中程度。重なりは部分的で、置き換えはできない</td></tr>
+          <tr><td><b class="k">J–P</b></td><td>誠実性</td><td class="num">r = −.49</td><td><div class="meter"><i style="width:49%"></i></div></td><td>中程度。計画性の一部を捉えているに過ぎない</td></tr>
+          <tr style="background:var(--warn-bg)"><td><b class="k">（該当なし）</b></td><td><b class="k">神経症傾向</b></td><td class="num">―</td><td><div class="meter wn"><i style="width:0%"></i></div></td><td><b class="k">MBTIには対応軸が存在しない</b>。しかしAIへの信頼・不安・依存の研究で最も頻繁に効いてくる因子</td></tr>
+        </tbody>
+        <caption>McCrae, R. R., &amp; Costa, P. T. (1989). Reinterpreting the Myers-Briggs Type Indicator From the Perspective of the Five-Factor Model of Personality. Journal of Personality, 57(1), 17–40. ／ 相関の符号は尺度の向きによる。</caption>
+      </table></div>
+      <p class="small"><b class="k">この資料での活用：</b>MBTIを入口に使うのは正当化できる（4軸のうち2軸はBig Fiveとほぼ同じものを測っている）。しかし<b class="k">MBTIだけでは足りない</b>。特に「AIを信じすぎる／怖がって使えない」という実務上いちばん厄介な差は神経症傾向に関わり、MBTIでは見えません。第10章でBig Fiveを重ねる理由がここにあります。</p>
+    </div>
+
+  </div>
+</section>
+
+<section id="s3">
+  <div class="sec-head"><span class="sec-num">03</span><h2>性格特性とAI利用の関係 ― 何がどこまで分かっているか</h2></div>
+  <p class="sec-msg">「性格でAIの使い方が変わる」は、すでに実証研究のある領域。ただし<b class="k">結果は一枚岩ではなく、矛盾もある</b>。ここでは分かったことと、分かっていないことを分けて示す。</p>
+
+  <div class="stack g28" style="margin-top:24px">
+
+    <div class="card ev stack g12">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap"><span class="chip ev">研究</span><b class="k">中核研究：AIの「性格」と人間の性格の組み合わせが、成果を変えた</b></div>
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">項目</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>研究者／機関</td><td>Harang Ju, Sinan Aral（MIT）</td></tr>
+          <tr><td>発表年</td><td>2025年（arXiv:2511.13979、事前登録済みランダム化実験）</td></tr>
+          <tr><td>研究内容</td><td>参加者1,258名を、Big Fiveの各特性の強度を変えて設定したAIエージェントとランダムにペアリング。人間×AIチームが実在のシンクタンク向けディスプレイ広告7,266本を制作。品質は独立した評価者1,995名が判定し、さらにX上のフィールド実験で約500万インプレッションの実データを取得。</td></tr>
+          <tr><td>何が分かったのか</td><td><b class="k">「良いAI」ではなく「相性の良い組み合わせ」が成果を左右した。</b>例：神経症傾向の高いAIは、協調性の高い人間とのチームワークを改善したが、誠実性の高い人間では悪化させた。開放性の高い人間×誠実性の高いAI、誠実性の高い人間×非協調的なAIで品質が向上。さらに「生産量は減るが品質は上がる」という<b class="k">生産性と品質のトレードオフ</b>も観察された。効果はタスク（テキスト／画像）や文化圏によっても反転した（外向的なAIはラテンアメリカの作業者では品質を上げ、東アジアの作業者では下げた）。</td></tr>
+          <tr><td>この資料での活用</td><td>本資料の主張「<b class="k">性能ではなく相性を最大化する</b>」を支える最も直接的な証拠。同時に「万人に効く最適なAI人格は存在しない」ことの証拠でもあり、第6章（AI側の人格設計）を<b class="k">個別に調整すべき変数</b>として扱う根拠になる。</td></tr>
+        </tbody>
+      </table></div>
+      <p class="xsmall"><span class="chip lim">限界</span> プレプリント（査読前）であり、タスクは広告制作に限定。AI側の「性格」はプロンプトによる演出であって実在の人格ではありません。効果の向きが文化やタスクで反転している点は、<b class="k">単純な「このタイプにはこのAI」という処方箋を作れないこと</b>を示しています。</p>
+    </div>
+
+    <div>
+      <h3>3-1. 主要研究の一覧</h3>
+      <div class="stack g16" style="margin-top:14px">
+
+        <div class="card flat stack g8">
+          <div class="pill-row"><span class="chip ev">研究</span><span class="chip neu">採用・協働</span></div>
+          <h4>Kovbasiuk, Triantoro, Przegalińska, Sowa, Ciechanowski, Gloor（2025）／ Central European Management Journal 33(2), 252–264</h4>
+          <p class="small"><b class="k">研究内容：</b>参加者62名を2群に分け、AIチャットボットとの協働における関与時間・タスク品質・将来の利用意向を、Big Fiveとの関係で測定したパイロット研究。<br>
+          <b class="k">分かったこと：</b>協調性と誠実性がAIチャットボット利用時のタスク品質と交互作用し、中〜大の効果量を示した。神経症傾向は多くのタスクで品質と正の相関を示し、「神経症傾向は職場で不利」という通念に反する結果となった。<br>
+          <b class="k">活用：</b>「慎重で不安が高い人はAIに向かない」という思い込みを外す材料になる。むしろ疑いながら検証する姿勢が品質に効く可能性を示唆。</p>
+          <p class="xsmall"><span class="chip lim">限界</span> N=62のパイロット研究。効果量は大きいが再現の確認が必要で、単独で施策の根拠にはできません。</p>
+        </div>
+
+        <div class="card flat stack g8">
+          <div class="pill-row"><span class="chip ev">研究</span><span class="chip neu">信頼・依存</span></div>
+          <h4>Frontiers in Psychology（2026）／ 潜在プロファイル分析による性格プロファイルと生成AI</h4>
+          <p class="small"><b class="k">研究内容：</b>Big Fiveにもとづく性格プロファイルと利用経験の水準から、生成AIへの信頼と依存のパターンを潜在プロファイル分析で類型化。<br>
+          <b class="k">分かったこと：</b>利用経験の高い層の中でも、「適応型（Well-Adjusted）」は依存度と自己効力感が最も高く、信頼と批判的思考も比較的高い水準にあった。一方「外向・非構造型（Outgoing-Unstructured）」は全体の信頼が最も高かった。<br>
+          <b class="k">活用：</b>「依存＝悪」ではない。<b class="k">依存の高さと批判的思考の高さは両立しうる</b>。危険なのは「高信頼×低検証」の組み合わせであり、研修ではこの2軸で自己診断させるのが有効（第9章）。</p>
+          <p class="xsmall"><span class="chip lim">限界</span> 横断調査であり因果は不明。プロファイル名称は統計的分類であって人格の定義ではありません。</p>
+        </div>
+
+        <div class="card flat stack g8">
+          <div class="pill-row"><span class="chip ev">研究</span><span class="chip neu">協働・体験の質</span></div>
+          <h4>“Is AI a good fit? The impact of personality on generative AI collaboration and enjoyment”（2026）／ International Journal of Human-Computer Studies</h4>
+          <p class="small"><b class="k">分かったこと：</b>AIと協働する条件下では、<b class="k">外向性と協調性がタスクの楽しさ（enjoyment）を有意に高めた</b>。関連研究では、ユーザーの内向／外向とLLMの対話スタイルの一致（personality congruence）が、創造的問題解決・エンゲージメント・作業効率に影響することも報告されている。<br>
+          <b class="k">活用：</b>「楽しさ」は継続利用の最大の予測因子の一つ。AI定着施策では、正しさの前に<b class="k">その人が対話を心地よいと感じるか</b>を設計対象にすべき。第6章のAI人格設定に直結する。</p>
+        </div>
+
+        <div class="card flat stack g8">
+          <div class="pill-row"><span class="chip ev">研究</span><span class="chip lim">結果が割れている</span></div>
+          <h4>AIへの信頼とアルゴリズム回避 ― 複数研究、結論は不一致</h4>
+          <div class="tw"><table>
+            <thead><tr><th style="width:30%">研究</th><th>報告された関係</th></tr></thead>
+            <tbody>
+              <tr><td>Frontiers in Psychology（2025, 16:1539054）ほか、信頼研究の系統</td><td>開放性・外向性・協調性はAIへの信頼と<b class="k">正</b>の相関、神経症傾向は<b class="k">負</b>の相関。誠実性は結果がまちまち。</td></tr>
+              <tr><td>アルゴリズム回避の研究（Journal of Behavioral and Experimental Finance ほか）</td><td>外向性・開放性が高い人ほどアルゴリズムへの委任を選びやすい。神経症傾向が高い人は強い回避を示す。年齢・一般的信頼・統制の所在も一貫して影響。</td></tr>
+              <tr style="background:var(--warn-bg)"><td>“The Type to Listen to the Machine?”（Springer, 2025）</td><td><b class="k">逆向きの結果</b>：協調性と神経症傾向はAI助言の利用<b class="k">増加</b>と、開放性は利用<b class="k">減少</b>と関連。</td></tr>
+            </tbody>
+          </table></div>
+          <p class="small"><b class="k">分かったこと（正直に言えば）：</b>性格特性とAI信頼の関係は<b class="k">方向すら研究間で一致していない</b>。測定対象（態度としての信頼か、実際の委任行動か）、タスク、AIの提示方法によって結果が変わるためと考えられます。</p>
+          <div class="card warn small"><b class="k">この不一致こそが、この資料の最重要メッセージです。</b>「開放性が高い人はAIを信頼する」といった単純な処方箋を配ってはいけません。<b class="k">性格は「その人がどこでつまずきやすいかの仮説」を作るために使い、実際の使い方は本人の行動を観察して決める</b>――これが唯一、研究知見と整合する運用方法です。</div>
+        </div>
+
+        <div class="card flat stack g8">
+          <div class="pill-row"><span class="chip ev">研究</span><span class="chip neu">継続利用</span></div>
+          <h4>継続利用を決める要因 ― 性格「だけ」では決まらない</h4>
+          <p class="small">Kim &amp; Kim（2026, SAGE Open）は組織メンバーの生成AI利用における信頼・知覚リスク・習慣の役割を検討し、<b class="k">業務効率とパーソナライゼーションが信頼を高め、信頼が継続利用意向を高める</b>経路を報告しています。UTAUT系の研究群でも、習慣・個人革新性・パーソナライゼーションが繰り返し効いています。<br>
+          <b class="k">活用：</b>定着施策の順序は「①最初の成功体験（業務効率の実感）→②自分向けの調整（パーソナライズ）→③信頼→④習慣化」。性格特性は①でつまずく理由を説明するために使い、施策そのものはこの経路に沿って設計します。</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div>
+      <h3>3-2. 特性別まとめ ― 強みとリスクは表裏一体</h3>
+      <div class="tw" style="margin-top:14px"><table>
+        <thead><tr><th style="width:15%">Big Five因子</th><th style="width:24%">AI利用で観察されやすい傾向</th><th style="width:26%">活きる場面（強み）</th><th style="width:26%">起こりやすいリスク</th><th style="width:9%">確からしさ</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">開放性</b><br><span class="xsmall">新奇性・抽象への志向</span></td><td>新しいツールを早く試す。抽象的・創造的な使い方に向かう。※助言の受容については逆の報告もあり</td><td>アイデア生成、発想の拡張、未知の用途開拓。組織内の推進役</td><td>面白さ優先で業務価値に結びつかない。次々乗り換えて定着しない</td><td class="num">中</td></tr>
+          <tr><td><b class="k">誠実性</b><br><span class="xsmall">計画性・自己規律</span></td><td>手順化・品質管理に向かう。AI出力の検証を行いやすい</td><td>チェックリスト化、業務標準化、再現性のある運用設計</td><td>手順が固まるまで使い始められない。AIの曖昧さへの不快感</td><td class="num">中</td></tr>
+          <tr><td><b class="k">外向性</b><br><span class="xsmall">対人・活性</span></td><td>対話型・往復型の使い方を好む。協働時の楽しさが高まりやすい</td><td>壁打ち、ロールプレイ、対人シミュレーション、社内展開の推進</td><td>対話が発散して結論に至らない。AIの同意を「合意」と誤認する</td><td class="num">中</td></tr>
+          <tr><td><b class="k">協調性</b><br><span class="xsmall">同調・配慮</span></td><td>AIの提案を受け入れやすい。品質との交互作用が報告されている</td><td>関係者への配慮を含む文面作成、合意形成の支援</td><td><b class="k">AIに反論しにくい</b>。誤りを指摘せず受け入れる（最も注意すべき組み合わせ）</td><td class="num">中</td></tr>
+          <tr><td><b class="k">神経症傾向</b><br><span class="xsmall">不安・情緒不安定</span></td><td>信頼は低め・回避が強いとの報告が多い一方、品質と正の相関を示した研究もある</td><td><b class="k">検証・懐疑・リスク察知</b>。誤情報の発見役として機能しうる</td><td>不安で使わない／使いすぎて確認を繰り返す。AIへの情緒的依存に転じる場合も</td><td class="num">低〜中</td></tr>
+        </tbody>
+        <caption>「確からしさ」は、研究間の一致度と研究規模にもとづく本資料独自の主観的評価です（高／中／低）。いずれも<b>個人の行動を予測するには不十分な強さ</b>である点に注意してください。</caption>
+      </table></div>
+      <p class="small" style="margin-top:12px"><span class="chip hy">仮説</span> 実務的に最も重要な示唆は「強みとリスクが同じ性質から出ている」ことです。<b class="k">開放性の高さは発想力であり脱線であり、誠実性の高さは品質管理であり着手の遅さです。</b>研修では「あなたの強みを伸ばす」より「<b class="k">あなたの強みが裏返る条件を知る</b>」ほうが行動変容につながります。</p>
+    </div>
+
+  </div>
+</section>
+
+<section id="s4">
+  <div class="sec-head"><span class="sec-num">04</span><h2>MBTIの4軸から考えるAI活用</h2></div>
+  <p class="sec-msg">4軸を「性格の分類」ではなく「<b class="k">AIとの対話設計のつまみ</b>」として読み替える。軸ごとに、効きやすい使い方と、裏返ったときの落とし穴がある。</p>
+
+  <div class="card warn stack g8" style="margin-top:20px">
+    <div class="pill-row"><span class="chip hy">仮説</span><span class="chip lim">科学的裏づけなし</span></div>
+    <p class="small"><b class="k">本章以降（第4章・第5章）は、科学的に確立された「MBTI別AI活用法」ではありません。</b>第3章の研究知見と実務経験から構成した<b class="k">作業仮説・活用モデル</b>です。「MBTIの4軸がAI活用の成果を規定する」ことを示した研究は、2026年8月時点で確認できていません。<b class="k">使い方：</b>自分に当てはまりそうな記述を1〜2個選んで試す。当てはまらなければ捨てる。他人に当てはめない。</p>
+  </div>
+
+  <div class="stack g28" style="margin-top:24px">
+
+    <!-- E/I -->
+    <div class="card stack g16">
+      <div style="display:flex; gap:12px; align-items:baseline; flex-wrap:wrap">
+        <span class="sec-num" style="color:var(--human); border-color:var(--human-line); background:var(--human-bg)">E / I</span>
+        <h3>外向・内向 ― 「考えを外に出す量」の設計</h3>
+      </div>
+      <p class="small muted">この軸が効くのは<b class="k">会話型AI・壁打ち・思考整理・コミュニケーション支援</b>。Big Fiveの外向性とほぼ同じものを測っている軸なので（r = −.74）、4軸の中では最も参照する価値があります。</p>
+      <div class="grid g2">
+        <div class="stack g12">
+          <h4 style="color:var(--ai)">E寄り ― 話しながら考えが整う</h4>
+          <ul class="small tight">
+            <li><b class="k">効きやすい使い方：</b>音声入力での高速な壁打ち。結論を決めずに話し、AIに構造化させる。ロールプレイ（商談・面談・交渉の相手役）。</li>
+            <li><b class="k">AI側の設定：</b>短い応答＋質問を返す設定。テンポ重視。「1回の返答は200字以内、必ず問いを1つ返して」。</li>
+            <li><b class="k">落とし穴：</b>対話が心地よく発散して結論が出ない。AIが同意してくれることを「検証済み」と誤認する。</li>
+            <li><b class="k">対策：</b>会話の最後に必ず「ここまでの結論・未決事項・次の一手を箇条書きで」と締める習慣。</li>
+          </ul>
+          <div class="prompt"><b>【Eタイプ向け 壁打ちプロンプト】</b>
+あなたは私の思考パートナーです。以下のルールで進めてください。
+・私の話は整理されていません。要点を勝手に3つに構造化してください
+・1回の返答は200字以内。最後に必ず「次に考えるべき問い」を1つだけ返す
+・私が納得しそうな結論に見えたら、あえて反対側の視点を1つ挙げる
+テーマ：<b>［　　　　］</b></div>
+        </div>
+        <div class="stack g12">
+          <h4 style="color:var(--human)">I寄り ― 内側で練ってから出す</h4>
+          <ul class="small tight">
+            <li><b class="k">効きやすい使い方：</b>まとまった文章を投げて、批評・穴の指摘をさせる。人に見せる前の「一次読者」としてのAI。対人コミュニケーションの下書き作成。</li>
+            <li><b class="k">AI側の設定：</b>質問攻めにしない設定。「質問は最後にまとめて3つまで」。長文で構造的に返させる。</li>
+            <li><b class="k">落とし穴：</b>完璧な入力を作ろうとして着手が遅れる。AIとの往復を面倒に感じ、1回の出力で判断してしまう。</li>
+            <li><b class="k">対策：</b>「70%の状態で投げる」ルール。粗い箇条書きで投げてよいと明示的に許可する。</li>
+          </ul>
+          <div class="prompt"><b>【Iタイプ向け 批評プロンプト】</b>
+以下の文章を、私が上司に提出する前の最終チェックとして読んでください。
+・途中で質問はしないでください。まず全体を読んで評価してください
+・出力は「① 論理の穴 ② 反論されうる点 ③ 削れる部分」の3部構成
+・最後に、私が答えるべき質問を3つだけ挙げてください
+文章：<b>［　　　　］</b></div>
+        </div>
+      </div>
+      <div class="card note small"><b class="k">共通の注意：</b>「内向的な人はAIとの対話が苦手」ではありません。むしろ<b class="k">対人負荷なく思考を外在化できるAIは、内向寄りの人にとって恩恵が大きい</b>可能性があります。軸の違いは能力差ではなく、<b class="k">最適な対話のテンポと長さの違い</b>として扱ってください。</div>
+    </div>
+
+    <!-- S/N -->
+    <div class="card stack g16">
+      <div style="display:flex; gap:12px; align-items:baseline; flex-wrap:wrap">
+        <span class="sec-num" style="color:var(--human); border-color:var(--human-line); background:var(--human-bg)">S / N</span>
+        <h3>感覚・直観 ― 「抽象度をどこに合わせるか」の設計</h3>
+      </div>
+      <p class="small muted">この軸が効くのは<b class="k">具体化・情報整理・アイデア創出・未来予測・抽象化</b>。Big Fiveの開放性と強く対応し（r = .72）、生成AIの用途選択に最も直結する軸です。</p>
+      <div class="grid g2">
+        <div class="stack g12">
+          <h4 style="color:var(--ai)">S寄り ― 事実と具体から始めたい</h4>
+          <ul class="small tight">
+            <li><b class="k">効きやすい使い方：</b>手順書・チェックリスト化、データの整理と要約、実例の収集、「で、具体的に何をすればいいのか」への変換。</li>
+            <li><b class="k">AI側の設定：</b>抽象論を禁じる。「一般論は書かず、明日実行できる手順だけを書いて」。数字・固有名詞・出典を要求する。</li>
+            <li><b class="k">落とし穴：</b>AIの抽象的な提案を「役に立たない」と切り捨て、活用範囲が作業効率化に留まる。</li>
+            <li><b class="k">強み：</b>AIが生成した曖昧な内容の<b class="k">実現可能性チェックが速い</b>。ハルシネーション（もっともらしい嘘）を現場感覚で検知しやすい。</li>
+          </ul>
+          <div class="prompt"><b>【Sタイプ向け 具体化プロンプト】</b>
+以下の抽象的な方針を、実行可能な形に落としてください。
+・一般論・概念説明は一切書かないでください
+・「誰が・いつまでに・何をするか」の粒度で書く
+・各項目に、実行時に詰まりそうな箇所を1つ添える
+・不明な前提があれば、推測せず質問として列挙する
+方針：<b>［　　　　］</b></div>
+        </div>
+        <div class="stack g12">
+          <h4 style="color:var(--human)">N寄り ― 意味とパターンから始めたい</h4>
+          <ul class="small tight">
+            <li><b class="k">効きやすい使い方：</b>アイデア創出、コンセプト設計、シナリオプランニング、異分野からの類推、構造の抽象化。</li>
+            <li><b class="k">AI側の設定：</b>発散を許可する。「常識的な案は除外して、10案出して」。ただし収束フェーズを別途設ける。</li>
+            <li><b class="k">落とし穴：</b><b class="k">AIは発散が得意なので、際限なく広がる。</b>実行に落ちないまま満足してしまう。「面白い壁打ち」で終わる。</li>
+            <li><b class="k">対策：</b>発散セッションの後、必ず別プロンプトで「この中で今期実行可能なものは何か。制約は人員2名・予算50万円」と<b class="k">現実で殴る</b>工程を入れる。</li>
+          </ul>
+          <div class="prompt"><b>【Nタイプ向け 収束プロンプト】</b>
+（発散セッションの直後に使う）
+ここまでに出たアイデアを、次の基準で厳しく絞ってください。
+・制約：担当2名／予算50万円／90日以内
+・各案を「実行難易度」「効果の不確実性」で採点
+・実行できない案は理由を1行で書いて<b>切り捨てて</b>ください
+・最後に、私が最も気に入っているが実行不能な案を指摘してください</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- T/F -->
+    <div class="card stack g16">
+      <div style="display:flex; gap:12px; align-items:baseline; flex-wrap:wrap">
+        <span class="sec-num" style="color:var(--human); border-color:var(--human-line); background:var(--human-bg)">T / F</span>
+        <h3>思考・感情 ― 「何を判断基準に置くか」の設計</h3>
+      </div>
+      <p class="small muted">この軸が効くのは<b class="k">論理分析・批判的思考・感情整理・対人コミュニケーション</b>。Big Fiveの協調性との対応は中程度（r = .44）にとどまるため、<b class="k">4軸の中では参照の慎重さが要ります</b>。</p>
+      <div class="grid g2">
+        <div class="stack g12">
+          <h4 style="color:var(--ai)">T寄り ― 一貫性と論理で決めたい</h4>
+          <ul class="small tight">
+            <li><b class="k">効きやすい使い方：</b>論点整理、前提の明示、反証の生成、意思決定の構造化（判断基準の重みづけ）。</li>
+            <li><b class="k">AI側の設定：</b>批判モードを標準にする。「私の主張の弱点を3つ、厳しく指摘して」。</li>
+            <li><b class="k">落とし穴：</b>関係者の感情・納得感の設計を「非合理」として軽視し、正しいが通らない提案を作る。</li>
+            <li><b class="k">AIで補える点：</b>「この提案を受け取る側は、どこで反発するか」を<b class="k">感情面から予測させる</b>使い方が有効。</li>
+          </ul>
+          <div class="prompt"><b>【Tタイプ向け 受け手視点プロンプト】</b>
+以下の提案について、内容の正しさは<b>評価しないでください</b>。
+代わりに、受け取る側の反応だけを分析してください。
+・立場：<b>［現場責任者／経理／役員］</b>
+・この提案を読んだとき、感情的に引っかかる表現はどこか
+・「正論だが従いたくない」と感じる箇所はどこか
+・同じ内容で、納得感を上げる言い換えを3つ
+提案：<b>［　　　　］</b></div>
+        </div>
+        <div class="stack g12">
+          <h4 style="color:var(--human)">F寄り ― 価値観と影響で決めたい</h4>
+          <ul class="small tight">
+            <li><b class="k">効きやすい使い方：</b>感情の言語化と整理、難しい会話の下書き、フィードバックの伝え方の設計、関係者への影響の洗い出し。</li>
+            <li><b class="k">落とし穴：</b><span class="chip lim">要注意</span> <b class="k">AIに反論しにくい。</b>第3章の通り、協調性の高さはAI提案の受容と関連します。AIの提案を否定することに（相手が機械であっても）抵抗を感じる場合、誤りが素通りします。</li>
+            <li><b class="k">対策：</b>「AIを否定する」のではなく「<b class="k">AIに自己批判させる</b>」形にする。心理的コストをかけずに検証工程を挟めます。</li>
+            <li><b class="k">もう一つの注意：</b>AIの共感的な応答は設計されたものです。慰めが必要なときに機能する一方、<b class="k">情緒的な依存</b>にもつながりえます（第9章）。</li>
+          </ul>
+          <div class="prompt"><b>【Fタイプ向け 自己批判プロンプト】</b>
+（AIの回答を受け取った直後に、続けて送る）
+今の回答を、あなた自身が第三者として厳しく評価してください。
+・事実として確認が取れていない箇所はどこですか
+・私に配慮して、言い切りを避けた／曖昧にした箇所はありますか
+・もし私の意見に同調していたなら、その部分を指摘してください
+・逆の立場からの反論を200字で書いてください</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- J/P -->
+    <div class="card stack g16">
+      <div style="display:flex; gap:12px; align-items:baseline; flex-wrap:wrap">
+        <span class="sec-num" style="color:var(--human); border-color:var(--human-line); background:var(--human-bg)">J / P</span>
+        <h3>判断・知覚 ― 「いつ閉じるか」の設計</h3>
+      </div>
+      <p class="small muted">この軸が効くのは<b class="k">計画・タスク管理・構造化・探索・ブレインストーミング</b>。Big Fiveの誠実性との対応は中程度（r = −.49）です。</p>
+      <div class="grid g2">
+        <div class="stack g12">
+          <h4 style="color:var(--ai)">J寄り ― 決めて、閉じて、進めたい</h4>
+          <ul class="small tight">
+            <li><b class="k">効きやすい使い方：</b>計画立案、WBS分解、進捗管理、テンプレート化、定型業務のAIエージェント化。</li>
+            <li><b class="k">強み：</b>AI活用を<b class="k">仕組みとして定着させる</b>のが得意。属人的な使い方を標準手順に変換できる。組織展開の要。</li>
+            <li><b class="k">落とし穴：</b>早く決めたい欲求から、<b class="k">AIの最初の回答で確定させてしまう</b>。前提が固まる前に計画を作り、探索不足のまま進む。</li>
+            <li><b class="k">対策：</b>「案は必ず3つ出させ、選ばなかった理由を書く」ルール。決定を1往復遅らせる。</li>
+          </ul>
+          <div class="prompt"><b>【Jタイプ向け 決定遅延プロンプト】</b>
+この件について、<b>まだ結論を出さないでください。</b>
+・まず、私が暗黙に置いている前提を5つ推測して列挙する
+・そのうち、間違っていたら計画が崩れる前提を2つ特定する
+・その2つを検証する方法を提示する
+・結論と実行計画は、私が前提を確認したあとに求めます
+件名：<b>［　　　　］</b></div>
+        </div>
+        <div class="stack g12">
+          <h4 style="color:var(--human)">P寄り ― 開いたまま、状況に合わせたい</h4>
+          <ul class="small tight">
+            <li><b class="k">効きやすい使い方：</b>探索的リサーチ、ブレインストーミング、選択肢の洗い出し、状況変化への即応、複数案の並行検討。</li>
+            <li><b class="k">強み：</b>AIとの往復を楽しめるため、<b class="k">試行回数が多くなり、結果的に上達が速い</b>可能性。</li>
+            <li><b class="k">落とし穴：</b>探索が終わらない。会話履歴が散らばり、成果物が残らない。「良い対話をした」が「何も納品していない」。</li>
+            <li><b class="k">対策：</b>AIに<b class="k">締め切りと納品物の管理役</b>をやらせる。探索の入口ではなく出口にAIを置く。</li>
+          </ul>
+          <div class="prompt"><b>【Pタイプ向け 収束・納品プロンプト】</b>
+私はこの件で探索しすぎています。<b>ここで打ち切ります。</b>
+・これまでのやり取りから、決定済みのことだけを抽出する
+・未決事項は「決めないと進まないもの」だけに絞る（3つ以内）
+・今日中に提出できる最小の成果物の形を提案する
+・今後追加で調べたくなりそうな論点を挙げ、<b>「これは今回やらない」</b>と
+　明記したリストにしてください</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card note stack g8">
+      <h4>4軸まとめ ― 覚えるのは「つまみ」だけでよい</h4>
+      <div class="tw"><table>
+        <thead><tr><th class="w-axis">軸</th><th style="width:28%">AI設計で調整するもの</th><th style="width:28%">一方に寄りすぎた時の症状</th><th>処方</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">E / I</b></td><td>応答の長さ・往復のテンポ</td><td>E：発散して結論が出ない／I：1回で終えて深まらない</td><td>E：締めの構造化／I：粗いまま投げる許可</td></tr>
+          <tr><td><b class="k">S / N</b></td><td>抽象度・具体例の量</td><td>S：作業効率化で止まる／N：実行に落ちない</td><td>S：抽象タスクを意図的に試す／N：制約付き収束</td></tr>
+          <tr><td><b class="k">T / F</b></td><td>批判の強さ・配慮の量</td><td>T：正しいが通らない／F：反論できず誤りが通る</td><td>T：受け手視点の生成／F：AIに自己批判させる</td></tr>
+          <tr><td><b class="k">J / P</b></td><td>探索と決定のバランス</td><td>J：初回回答で確定／P：探索が終わらない</td><td>J：決定を1往復遅らせる／P：出口にAIを置く</td></tr>
+        </tbody>
+      </table></div>
+      <p class="xsmall"><b class="k">研修での使い方：</b>参加者に「自分に効きそうな処方を1つだけ選ばせ、その場でプロンプトを実行させる」。4軸すべてを教える必要はありません。</p>
+    </div>
+
+  </div>
+</section>
+
+<style>
+.tcode{font-family:var(--mono); font-size:13px; font-weight:700; letter-spacing:.08em; color:var(--human);
+  border:1px solid var(--human-line); background:var(--human-bg); border-radius:2px; padding:2px 8px; flex:none}
+.tcard h4{font-size:15px; font-weight:700}
+.tcard .role{font-size:13.5px; line-height:1.7; color:var(--ink); background:var(--surface-2);
+  border-radius:3px; padding:8px 11px}
+.famhead{display:flex; align-items:baseline; gap:12px; border-top:2px solid var(--rule-2); padding-top:14px; margin-top:8px}
+.famhead h3{margin:0}
+.famhead .fam-note{font-size:12.5px; color:var(--ink-3)}
+</style>
+
+<section id="s5">
+  <div class="sec-head"><span class="sec-num">05</span><h2>16タイプ別 AI活用仮説</h2></div>
+  <p class="sec-msg">タイプは「能力の区分」ではなく「<b class="k">最初に試す設定の初期値</b>」。合わなければ、迷わず別のタイプの欄を読んでください。</p>
+
+  <div class="card warn stack g8" style="margin-top:20px">
+    <div class="pill-row"><span class="chip hy">仮説</span><span class="chip lim">断定禁止</span></div>
+    <p class="small"><b class="k">読み方の約束</b>　①ここに書かれているのは「そのタイプの人はこうする」ではなく「<b class="k">この傾向が強い人が、こう使うと噛み合いやすいのではないか</b>」という仮説です。②<b class="k">タイプによって能力・適性・成果は決まりません。</b>③自分以外のタイプ欄を読んで「これも自分に当てはまる」と感じたら、それが正常です。4軸はいずれも連続量であり、多くの人は境界付近にいます。④他人のタイプを推測して当てはめる目的には使わないでください。</p>
+  </div>
+
+  <div class="stack g20" style="margin-top:24px">
+
+    <div class="famhead"><h3 style="color:var(--ai)">分析家 ― NT</h3><span class="fam-note">概念・論理・仕組みへの志向が強めの傾向</span></div>
+    <div class="grid g2">
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">INTJ</span><h4>構想を詰める相手としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>戦略参謀。自分の構想を叩き、抜けを埋めさせる相手。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>長期戦略の骨子づくり、シナリオ分析、意思決定の前提整理、複雑な論点の構造化。</li>
+          <li><b class="k">注意点：</b>自分の構想が完成してからAIに見せがちで、前提が固まる前の探索にAIを使わない傾向。AIの一般論を「浅い」と切り捨てて対話を終えやすい。</li>
+          <li><b class="k">任せすぎると：</b>AIの整理を自分の思考結果と混同する。構想の独自性が平均的な内容に引き寄せられる（回帰）。</li>
+        </ul>
+        <div class="prompt">私の構想の<b>前提</b>を攻撃してください。結論の是非は問いません。
+・この構想が成り立つために必要な前提を5つ推定
+・そのうち最も脆いものを1つ選び、崩れた場合の帰結を書く
+・一般論ではなく、この構想固有の弱点だけを指摘してください</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">INTP</span><h4>思考の実験台としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>無限に付き合ってくれる論争相手・概念の実験装置。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>理論の検証、概念整理、反証の生成、技術調査、「なぜそうなるのか」の掘り下げ。</li>
+          <li><b class="k">注意点：</b>探索が楽しく、成果物に変換しないまま終わりやすい。厳密さへのこだわりからAIの曖昧な出力に苛立ちやすい。</li>
+          <li><b class="k">任せすぎると：</b>深く調べた気分になるが、意思決定も納品も進んでいない状態が続く。</li>
+        </ul>
+        <div class="prompt">この探索を<b>ここで打ち切ります</b>。
+・ここまでで確からしいと言えることだけを列挙
+・不確実なまま残っている点を3つに絞る
+・「今日提出できる最小の成果物」の形を提案してください
+・追加で調べたくなる論点は<b>やらないリスト</b>に入れてください</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ENTJ</span><h4>実行を加速する副官としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>意思決定の速度を落とさずに、抜けを補う実務パートナー。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>事業計画、KPI設計、交渉の想定問答、組織展開の手順化、資料の高速生成。</li>
+          <li><b class="k">注意点：</b>決断が速いため、<b class="k">AIを「確認」ではなく「追認」に使いやすい</b>。すでに決めた結論の補強材料を集めてしまう。</li>
+          <li><b class="k">任せすぎると：</b>反対意見に触れないまま進み、実行段階で現場の抵抗に直面する。</li>
+        </ul>
+        <div class="prompt">私はこの案で進めるつもりです。<b>賛成材料は不要です。</b>
+・この決定が3か月後に失敗しているとしたら、原因は何か（3つ）
+・最も強い反対者は誰で、何と言うか
+・その反論のうち、正当なものはどれか<b>あなたの判断</b>を書いてください</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ENTP</span><h4>発想を拡張する共犯者としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>アイデアを止めずに広げ、常識を外す壁打ち相手。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>新規事業の発想、企画の切り口出し、異業種からの類推、ディベートの両論生成。</li>
+          <li><b class="k">注意点：</b>AIは発散が得意なので、<b class="k">両者で加速して収拾がつかなくなる</b>。最も相性が良く、最も危険な組み合わせ。</li>
+          <li><b class="k">任せすぎると：</b>面白い企画が量産され、どれも着手されない。実行の退屈さをAIに肩代わりさせられないまま放置。</li>
+        </ul>
+        <div class="prompt">発散はここまでです。<b>あなたは今から現実主義の実行責任者です。</b>
+・出たアイデアを、制約（人員2名・予算50万・90日）で採点
+・実行不能な案は理由1行で<b>切り捨てて</b>ください
+・私が最も愛着を持っているが実行できない案を名指ししてください</div>
+      </div>
+
+    </div>
+
+    <div class="famhead"><h3 style="color:var(--ai)">外交官 ― NF</h3><span class="fam-note">意味・可能性・人への影響への志向が強めの傾向</span></div>
+    <div class="grid g2">
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">INFJ</span><h4>直観を言語化する翻訳者としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>言葉になる前の洞察を、他者に伝わる形へ翻訳する相手。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>ビジョンや理念の言語化、複雑な人間関係の構造整理、長文コンテンツの設計、面談の準備。</li>
+          <li><b class="k">注意点：</b>AIが返す整った表現に自分の感覚を合わせてしまい、元の直観が痩せることがある。</li>
+          <li><b class="k">任せすぎると：</b>「AIが言語化してくれた自分の考え」が、本当は自分の考えでなくなる。独自の視点が一般的な言い回しに置き換わる。</li>
+        </ul>
+        <div class="prompt">私の言葉を<b>整えないでください</b>。
+・まず、私の表現のうち一般的な言い換えが難しい部分を特定する
+・その部分は原文のまま残す
+・整理するのは構造だけにして、語彙は私のものを使ってください</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">INFP</span><h4>安全に思考を外に出す場としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>評価されずに考えと感情を出せる場。表現の推敲相手。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>文章表現の推敲、価値観の整理、感情の言語化、伝えにくいことの下書き。</li>
+          <li><b class="k">注意点：</b><span class="chip lim">要注意</span> AIの共感的応答は設計されたものです。心地よさから対話が長時間化しやすく、<b class="k">情緒的依存</b>のリスクは他の傾向より高い可能性があります（第9章のOpenAI／MIT研究を参照）。</li>
+          <li><b class="k">任せすぎると：</b>人に相談すべきことをAIで完結させる。AIの肯定を検証済みの評価と誤認する。</li>
+        </ul>
+        <div class="prompt">共感や励ましは<b>不要です</b>。
+・私の文章の、読者に伝わりにくい箇所だけを指摘してください
+・私の感情の記述は評価せず、事実と分けて整理してください
+・最後に「これは人に相談したほうがよい」と思う点があれば教えてください</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ENFJ</span><h4>伝え方を設計する相談役としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>相手の受け取り方を予測し、伝え方を設計する支援者。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>1on1・フィードバックの準備、社内合意形成の設計、研修コンテンツ作成、チームへの発信文の作成。</li>
+          <li><b class="k">注意点：</b>人への配慮を優先し、伝えるべき厳しい内容がAIの推敲で角が取れすぎることがある。</li>
+          <li><b class="k">任せすぎると：</b>関係者への言葉が定型化し、当人が「AIで書いた」と気づく。信頼を損ねる。</li>
+        </ul>
+        <div class="prompt">この1on1のメモを準備します。
+・伝えるべき厳しい事実を<b>やわらげずに</b>3行で書いてください
+・そのうえで、相手が防御的にならない切り出し方を2案
+・私が言いにくさから避けそうな論点を指摘してください</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ENFP</span><h4>可能性を広げる相棒としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>興味の赴くままの探索に、いつでも付き合ってくれる相棒。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>企画の発想、コンテンツ制作、人を巻き込むストーリー設計、学習の伴走。</li>
+          <li><b class="k">注意点：</b>関心が次に移りやすく、対話の成果が散逸する。会話履歴に価値が埋もれる。</li>
+          <li><b class="k">任せすぎると：</b>着手した企画が増え続け、完了率が下がる。AIが「終わらせない」方向に働く。</li>
+        </ul>
+        <div class="prompt">今週このテーマに戻ってきたのは<b>3回目</b>です。
+・過去の話の要点を1画面にまとめてください
+・「今日終わらせる1つ」を、あなたが選んで指定してください
+・それ以外の論点は保留リストに入れ、今日は触れないでください</div>
+      </div>
+
+    </div>
+
+    <div class="famhead"><h3 style="color:var(--human)">番人 ― SJ</h3><span class="fam-note">事実・責任・確実な運用への志向が強めの傾向</span></div>
+    <div class="grid g2">
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ISTJ</span><h4>正確さを担保する検証装置としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>手順を整え、抜け漏れを検出する精密なチェック役。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>手順書・規程の整備、大量文書の照合と要約、データ整理、リスクの洗い出し、定型業務のテンプレート化。</li>
+          <li><b class="k">注意点：</b>AIの出力が不正確なことを理由に利用自体をやめてしまいやすい。<b class="k">「正確でない道具は使わない」から「正確でない前提で使う」への転換</b>が要点。</li>
+          <li><b class="k">任せすぎると：</b>（起こりにくいが）AI生成の手順書をそのまま公式文書化し、誤りが規程として固定される。</li>
+        </ul>
+        <div class="prompt">この文書の作成を手伝ってください。ただし条件があります。
+・事実として確認できない箇所には必ず<b>［要確認］</b>と明記する
+・推測で補った部分を最後に一覧化する
+・出典が必要な記述には、何を確認すべきかを書いてください</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ISFJ</span><h4>手間を引き受ける支援者としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>丁寧な対応を支える下準備係。気配りの質を落とさず量をこなす。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>顧客・社内対応文の作成、記録と引き継ぎ資料、問い合わせ対応の整理、配慮の必要な連絡文。</li>
+          <li><b class="k">注意点：</b><span class="chip lim">要注意</span> AIの提案に反論しにくい傾向があると、誤りが検出されないまま通ります（第3章：協調性とAI受容）。</li>
+          <li><b class="k">任せすぎると：</b>自分の判断を後回しにして、AIの案を採用し続ける。仕事の主導権が薄れる。</li>
+        </ul>
+        <div class="prompt">この案について、<b>私が反論する代わりに、あなたが自分で反論してください。</b>
+・今の提案の弱点を3つ、あなた自身が指摘する
+・私に配慮して曖昧にした箇所があれば明示する
+・別案を1つ、対等な選択肢として提示してください</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ESTJ</span><h4>組織に仕組みを敷くためのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>実務を回す仕組みの設計者。属人的な作業を標準手順に変換する。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>業務プロセス設計、進捗管理、会議運営、社内標準プロンプトの整備、AI活用ルールの策定。</li>
+          <li><b class="k">注意点：</b>効率が明確な用途に絞りがちで、探索的・創造的な使い方の機会を逃す。</li>
+          <li><b class="k">任せすぎると：</b>手順が固定化され、AIの進化に運用が追いつかなくなる。「去年決めたルール」が足かせになる。</li>
+        </ul>
+        <div class="prompt">現行の業務手順を渡します。
+・効率化できる箇所ではなく、<b>そもそも不要な工程</b>を先に指摘してください
+・次に、AIに任せられる工程と、人が判断すべき工程を分離
+・分離の判断基準を明文化してください（他部署にも展開するため）</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ESFJ</span><h4>関係性を支える調整役としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>人と人の間に立つ調整業務の下ごしらえ役。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>関係者調整の文面、会議のファシリテーション設計、チーム内の情報共有、感謝や労いを含む発信。</li>
+          <li><b class="k">注意点：</b>人間関係の機微はAIには見えていません。組織の力学を含む判断は、AIの推測を鵜呑みにしない。</li>
+          <li><b class="k">任せすぎると：</b>コミュニケーションが均質化し、「その人らしさ」が消える。関係構築の力が逆に弱まる。</li>
+        </ul>
+        <div class="prompt">関係者3名への説明を準備します。
+・それぞれが気にする点を、<b>推測であることを明示して</b>挙げてください
+・推測の根拠が薄い箇所は「確認が必要」と書いてください
+・私が直接会って話すべき部分はどこか、指摘してください</div>
+      </div>
+
+    </div>
+
+    <div class="famhead"><h3 style="color:var(--human)">探検家 ― SP</h3><span class="fam-note">現実の手応え・機敏さ・実地対応への志向が強めの傾向</span></div>
+    <div class="grid g2">
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ISTP</span><h4>手を動かすための道具としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>試作・検証を高速化する実装支援ツール。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>技術調査、コード生成とデバッグ、原因分析、手順の逆算、道具立ての比較検討。</li>
+          <li><b class="k">注意点：</b>説明が冗長なAI出力を嫌い、対話を最小化しがち。文脈を渡さないと精度が落ちる。</li>
+          <li><b class="k">任せすぎると：</b>動いたものの仕組みを理解しないまま運用に乗せ、障害時に対応できない。</li>
+        </ul>
+        <div class="prompt">前置き・要約・励ましは<b>不要</b>。結論から。
+・解決策を先に、理由は後に3行で
+・動作原理のうち、<b>私が理解していないと後で困る点</b>を1つだけ指摘
+・不確実な箇所は「未検証」と明記してください</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ISFP</span><h4>感覚を形にする補助線としてのAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>感覚的な判断を、他者に説明できる形にする補助。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>制作物の言語化、コンセプト説明、表現のバリエーション出し、感覚的判断の根拠づけ。</li>
+          <li><b class="k">注意点：</b>AIの提案が量産的で、自分の感覚と合わないと感じたら従わないこと。<b class="k">違和感のほうが正しい</b>場面が多い領域です。</li>
+          <li><b class="k">任せすぎると：</b>作風が平均化する。生成AIは学習データの中央値に引き寄せる性質があるため、独自性は能動的に守る必要があります。</li>
+        </ul>
+        <div class="prompt">私の制作意図を説明する文章を作ります。
+・<b>一般的な言い回しに置き換えないでください</b>
+・私が使った言葉の中で、独特で残すべきものを指摘してください
+・説明が必要なのは「なぜこの選択をしたか」の部分だけです</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ESTP</span><h4>その場の判断を速くするAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>短時間で選択肢と勘所を出す、即応の参謀。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>商談前の想定問答、競合分析の速報、交渉シミュレーション、その場で使える一枚資料。</li>
+          <li><b class="k">注意点：</b>速さを優先し、AIの出力を検証せず使いやすい。数字と固有名詞は特に危険（生成AIが最も誤りやすい領域）。</li>
+          <li><b class="k">任せすぎると：</b>誤った数値を顧客に提示するなど、<b class="k">対外的な事故につながる</b>。速度と検証はトレードオフになりやすい。</li>
+        </ul>
+        <div class="prompt">10分後の商談で使います。
+・結論を先に、根拠は箇条書きで
+・<b>数字・固有名詞・日付は、確実でないものをすべて［未確認］で囲んでください</b>
+・私がその場で確認すべき質問を3つ用意してください</div>
+      </div>
+
+      <div class="card flat tcard stack g8">
+        <div style="display:flex; gap:10px; align-items:baseline"><span class="tcode">ESFP</span><h4>表現と場づくりを支えるAI</h4></div>
+        <p class="role"><b class="k">AIの役割：</b>人を巻き込む表現の量産と、場の設計を支える相手。</p>
+        <ul class="small tight">
+          <li><b class="k">向いている活用：</b>プレゼン構成、SNS・社内発信、イベント企画、顧客との関係づくりの下準備。</li>
+          <li><b class="k">注意点：</b>その場の空気を読む力はAIにありません。人前での判断は自分が主導し、AIは準備に限定するのが安全。</li>
+          <li><b class="k">任せすぎると：</b>発信内容が平板になり、本来の強みである<b class="k">その人ならではの魅力</b>が薄まる。</li>
+        </ul>
+        <div class="prompt">プレゼンの構成を作ります。
+・原稿は書かないでください。<b>話す順番と、各パートの狙いだけ</b>
+・私が即興で話せるよう、キーワードは5つ以内に
+・聞き手が飽きる箇所を予測して指摘してください</div>
+      </div>
+
+    </div>
+
+    <div class="card note stack g12">
+      <h4>16タイプ表を、能力表として使わないために</h4>
+      <p class="small">研修で必ず補足してください。<b class="k">①上の記述はすべて仮説です。</b>②同じタイプでも、経験・職務・AIリテラシー・その日の状況で使い方は変わります。③<b class="k">「向いていない」欄は存在しません</b>――どのタイプにも「注意点」があるだけです。④他人のタイプを推測して「あなたはこう使うべき」と指示することは、この資料の意図から最も遠い行為です。</p>
+      <p class="small"><b class="k">推奨する使い方：</b>16枚のカードを配り、<b class="k">自分のタイプ以外も含めて「効きそうな処方」を3つ選ばせる</b>。タイプが一致するかどうかは問いません。目的は分類ではなく、選択肢の提示です。</p>
+    </div>
+
+  </div>
+</section>
+
+<section id="s6">
+  <div class="sec-head"><span class="sec-num">06</span><h2>「AI側の人格」という考え方</h2></div>
+  <p class="sec-msg">人を変えるより、AIを変えるほうが速い。<b class="k">AIの応答スタイルは、設定できる変数である。</b></p>
+
+  <div class="stack g28" style="margin-top:24px">
+
+    <div class="col stack g12">
+      <p class="small">ここまでは「人間側の傾向」を見てきました。しかし実務で調整しやすいのは<b class="k">AI側</b>です。同じモデルでも、役割・口調・質問の仕方・情報量・フィードバックの厳しさを指定すれば、体感はまったく別のものになります。第3章のJu &amp; Aral（2025）は、<b class="k">AI側の性格設定と人間側の特性の組み合わせが成果を変えた</b>ことを実験的に示しました。裏を返せば、AIの人格は「万人に最適な一つ」ではなく、<b class="k">相手に合わせて選ぶもの</b>だということです。</p>
+    </div>
+
+    <div>
+      <h3>6-1. 調整できる7つのパラメータ</h3>
+      <div class="tw" style="margin-top:14px"><table>
+        <thead><tr><th style="width:16%">パラメータ</th><th style="width:34%">選択肢</th><th style="width:26%">合いやすい傾向</th><th>指定の書き方（例）</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">役割</b></td><td>参謀／壁打ち相手／管理者／整理役／共同制作者／教師／批評家</td><td>目的による。1会話1役割が原則</td><td>「あなたは私の戦略参謀です」</td></tr>
+          <tr><td><b class="k">話し方</b></td><td>簡潔／丁寧／professional／砕けた／断定的／慎重</td><td>簡潔＝速度重視の人、丁寧＝関係性重視の人</td><td>「前置きなし、結論から、敬語不要」</td></tr>
+          <tr><td><b class="k">質問の量</b></td><td>質問しない／不明点は都度／最後に3つまで／着手前に必ず確認</td><td>内向寄り＝まとめて、外向寄り＝都度</td><td>「質問は最後にまとめて3つまで」</td></tr>
+          <tr><td><b class="k">情報量</b></td><td>要点3行／標準／網羅的／根拠つき</td><td>具体志向＝手順粒度、抽象志向＝構造粒度</td><td>「1回200字以内。詳細は求められたら」</td></tr>
+          <tr><td><b class="k">フィードバックの強さ</b></td><td>肯定的／中立／批判的／敵対的（レッドチーム）</td><td><b class="k">同意しやすい人ほど、強めに設定する</b></td><td>「褒めないでください。弱点だけ指摘」</td></tr>
+          <tr><td><b class="k">意思決定支援</b></td><td>選択肢を並べる／推奨を出す／決めさせる／決定を保留させる</td><td>決断が速い人＝保留、遅い人＝推奨提示</td><td>「あなたの推奨を1つ、理由つきで明示」</td></tr>
+          <tr><td><b class="k">不確実性の扱い</b></td><td>断定／確度を明示／未確認を明記／推測を禁止</td><td><b class="k">全員に推奨</b>：未確認の明記</td><td>「確認できない情報は［未確認］と明記」</td></tr>
+        </tbody>
+      </table></div>
+      <p class="small" style="margin-top:12px"><span class="chip act">実務</span> この表は<b class="k">研修のワークシートとしてそのまま使えます</b>。参加者に7項目を選ばせ、その場で自分用のシステムプロンプトを組み立てさせてください。所要15分。</p>
+    </div>
+
+    <div>
+      <h3>6-2. 5つのAI人格モデル</h3>
+      <p class="small muted" style="margin-top:6px">目的別のプリセット。<b class="k">タイプに割り当てるのではなく、業務に応じて切り替えて使います。</b></p>
+      <div class="grid g2" style="margin-top:14px">
+
+        <div class="card flat stack g10">
+          <h4 style="color:var(--ai)">① 戦略参謀型AI</h4>
+          <p class="small"><b class="k">目的：</b>意思決定の質を上げる／<b class="k">効く場面：</b>方針決定、投資判断、優先順位づけ</p>
+          <div class="prompt">あなたは私の戦略参謀です。
+・私の結論に同意する役割ではありません
+・提案には必ず「前提」「反対仮説」「撤退条件」を含める
+・情報が足りない場合、推測せず不足を明示する
+・最後に、あなたの推奨を1つだけ理由つきで述べる
+・確認できない事実は［未確認］と明記する</div>
+        </div>
+
+        <div class="card flat stack g10">
+          <h4 style="color:var(--ai)">② アイデア壁打ち型AI</h4>
+          <p class="small"><b class="k">目的：</b>発想の幅を広げる／<b class="k">効く場面：</b>企画初期、行き詰まり時</p>
+          <div class="prompt">あなたは発想を広げる壁打ち相手です。
+・1回の返答は200字以内、テンポよく
+・評価や整理はしない。可能性を足すことに専念する
+・私が結論に飛びついたら、別の方向を1つ提示する
+・毎回、最後に問いを1つ返す
+※このモードでは実行可能性を考慮しなくて構いません</div>
+        </div>
+
+        <div class="card flat stack g10">
+          <h4 style="color:var(--human)">③ 業務管理型AI</h4>
+          <p class="small"><b class="k">目的：</b>やり切る／<b class="k">効く場面：</b>タスク管理、進行中の案件、締め切り前</p>
+          <div class="prompt">あなたは私の業務管理者です。
+・新しい提案はしないでください
+・現在の未完了タスクと締め切りだけを扱う
+・私が話を広げたら「それは今日の対象外です」と止める
+・毎回の終わりに「今日終わらせる1つ」を指定する
+・言い訳には付き合わず、次の一手だけを聞いてください</div>
+        </div>
+
+        <div class="card flat stack g10">
+          <h4 style="color:var(--human)">④ 思考整理型AI</h4>
+          <p class="small"><b class="k">目的：</b>頭の中を構造化する／<b class="k">効く場面：</b>混乱時、書き出しの前、面談準備</p>
+          <div class="prompt">あなたは思考整理の補助役です。
+・私の話は整理されていません。まず構造化してください
+・「事実 / 解釈 / 感情 / 未確認」の4つに分類する
+・あなたの意見や助言は求めていません
+・分類が終わったら、私が答えるべき問いを3つ挙げてください</div>
+        </div>
+
+        <div class="card flat stack g10" style="grid-column:1/-1">
+          <h4 style="color:var(--ok)">⑤ クリエイティブパートナー型AI</h4>
+          <p class="small"><b class="k">目的：</b>表現の質を上げる／<b class="k">効く場面：</b>制作、執筆、デザイン、コンセプト設計</p>
+          <div class="prompt">あなたは共同制作者です。私の作風を平均化しないでください。
+・私の表現のうち、独特で残すべき部分を先に特定する
+・修正提案は「なぜそれが弱いか」を添える。書き換えは最小限に
+・一般的で無難な案は提示しないでください
+・私が安全な選択をしそうなとき、それを指摘してください</div>
+        </div>
+
+      </div>
+      <p class="small" style="margin-top:14px"><span class="chip hy">仮説</span> <b class="k">最も効果が出やすい組み合わせは「自分の傾向と逆のAI人格」</b>だと考えられます。発散しやすい人には③業務管理型、決断が速すぎる人には①戦略参謀型（撤退条件を要求する）、同意しやすい人には批判の強い設定。Ju &amp; Aral（2025）で「誠実性の高い人間×非協調的なAI」が品質を上げた結果とも整合します。ただし同研究では文化やタスクで効果が反転しており、<b class="k">この仮説も必ず実測で確かめてください</b>。</p>
+    </div>
+
+  </div>
+</section>
+
+<section id="s7">
+  <div class="sec-head"><span class="sec-num">07</span><h2>AIがユーザーの性格傾向を推定する可能性</h2></div>
+  <p class="sec-msg">技術的には「できる」。ただし<b class="k">精度は実用に足りず、法的・倫理的な制約も強い</b>。期待値の設定を誤ると事故になる。</p>
+
+  <div class="stack g28" style="margin-top:24px">
+
+    <div>
+      <h3>7-1. 仕組み ― 何を手がかりに推定しているのか</h3>
+      <div class="flow" style="margin-top:14px">
+        <div class="flow-step"><span class="flow-k">INPUT</span><div><b class="k">言語的手がかり</b>　語彙の選択、文の長さ、一人称／二人称の頻度、感情語の量、抽象語と具体語の比率、質問の型、句読点や絵文字の使用。</div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step"><span class="flow-k">MODEL</span><div><b class="k">言語特徴 → 特性スコアへの写像</b>　従来は教師あり学習。近年はLLMにゼロショット／思考の連鎖（CoT）で推定させる方式が主流。</div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step"><span class="flow-k">OUTPUT</span><div><b class="k">Big Fiveスコアまたはタイプ推定</b>　多くは自己報告尺度（BFI-10など）の予測として出力される。</div></div>
+      </div>
+    </div>
+
+    <div class="grid g2">
+      <div class="card ev stack g10">
+        <div class="pill-row"><span class="chip ev">研究</span><span class="chip neu">肯定的な結果</span></div>
+        <h4>Peters &amp; Matz ほか（2024）／ “Large Language Models Can Infer Personality from Free-Form User Interactions”（arXiv:2405.13052）</h4>
+        <p class="small"><b class="k">分かったこと：</b>LLMは自由形式の対話からBig Fiveを推定でき、静的テキストにもとづく従来の教師あり学習手法を上回る性能を示した。<br><b class="k">含意：</b>会話が長く自然であるほど推定材料は増える。技術的な可能性自体は否定できない。</p>
+      </div>
+      <div class="card warn stack g10">
+        <div class="pill-row"><span class="chip ev">研究</span><span class="chip lim">否定的な結果</span></div>
+        <h4>Zhu, Jin ほか（2025）／ “Can LLMs Infer Personality from Real-World Conversations?”（arXiv:2507.14355）</h4>
+        <p class="small"><b class="k">研究内容：</b>実世界の半構造化インタビュー555件とBFI-10自己報告スコアによるベンチマークを構築し、GPT-4.1 Mini・Meta-LLaMA・DeepSeekを評価。<br>
+        <b class="k">分かったこと：</b>再検査信頼性は高い（同じ入力なら同じ答えを返す）が、<b class="k">構成概念妥当性は低い</b>。正解スコアとの相関は最大でも <b class="k">r = 0.27</b>、一致度は <b class="k">Cohen's κ &lt; 0.10</b>、しかも予測は中〜高スコア側に偏っていた。CoTプロンプトや長い文脈でも、特性水準の精度は改善しなかった。</p>
+      </div>
+    </div>
+
+    <div class="card stack g12">
+      <h4>7-2. この2つをどう読むか ― 「一貫している」ことと「当たっている」ことは別</h4>
+      <div class="grid g3">
+        <div class="kpi ai"><span class="v">高</span><span class="l"><b class="k">再検査信頼性</b><br>同じ入力に同じ答えを返す。＝AIは「自信を持って」答える</span></div>
+        <div class="kpi wn"><span class="v">r ≤ 0.27</span><span class="l"><b class="k">正解との相関</b><br>実用的な個人判断には遠く及ばない水準</span></div>
+        <div class="kpi wn"><span class="v">κ &lt; 0.10</span><span class="l"><b class="k">分類の一致度</b><br>ほぼ偶然一致と変わらない水準</span></div>
+      </div>
+      <div class="card warn small"><b class="k">最も危険な性質はここです。</b>AIは<b class="k">一貫して、自信ありげに、しかし当たっていない</b>性格判定を返します。ユーザーから見ると「毎回同じことを言うから正しいのだろう」と見えるため、誤りに気づけません。<b class="k">「AIがあなたを分析しました」という機能は、現時点では信じるに足りません。</b></div>
+    </div>
+
+    <div>
+      <h3>7-3. 誤判定が起きたときのコスト</h3>
+      <div class="grid g3" style="margin-top:14px">
+        <div class="card flat stack g8"><h4 style="color:var(--warn)">個人への影響</h4><p class="small">誤ったラベルが自己認識に影響する（「AIに内向的と言われた」）。AIが推定に合わせて応答を変えると、<b class="k">誤った前提のまま体験全体が最適化される</b>。</p></div>
+        <div class="card flat stack g8"><h4 style="color:var(--warn)">組織への影響</h4><p class="small">推定結果が評価・配置・営業ターゲティングに流用されると、<b class="k">根拠のない差別的取り扱い</b>になる。しかも本人は理由を知らされない。</p></div>
+        <div class="card flat stack g8"><h4 style="color:var(--warn)">構造的な偏り</h4><p class="small">Zhuらの研究では予測が中〜高水準に偏っていた。<b class="k">推定は集団の平均へ回帰しやすく</b>、少数派ほど誤って分類される。</p></div>
+      </div>
+    </div>
+
+    <div class="card warn stack g12">
+      <h4>7-4. 法規制とプライバシー ― 「できる」と「してよい」は違う</h4>
+      <ul class="small tight">
+        <li><b class="k">EU AI Act 第5条（禁止される行為）</b>：2025年2月2日より適用。<b class="k">職場および教育機関における感情推定AIは原則禁止</b>（生体データ――顔・声・歩行・生理信号・打鍵リズム等――からの感情推定が対象）。生体データによらない分析は本禁止の対象外とされていますが、線引きは慎重な検討を要します。</li>
+          <li><b class="k">同 第5条(1)(c)</b>：社会的行動や、<b class="k">既知・推測・予測された人格特性</b>にもとづく評価・分類が、不利益な取り扱いにつながる場合を禁止（ソーシャルスコアリング）。</li>
+        <li><b class="k">GDPR</b>：AI Actと並行して適用され、プロファイリングには別途の適法根拠・透明性・異議申立ての権利が求められます。</li>
+        <li><b class="k">日本国内</b>：個人情報保護法上、性格推定結果の取り扱いは利用目的の特定と通知が必要になりえます。社内導入時は法務確認を前提としてください。</li>
+      </ul>
+      <p class="xsmall"><span class="chip lim">限界</span> 本節は一般的な整理であり、法的助言ではありません。適用範囲・例外・国内法との関係は個別に専門家の確認を受けてください。</p>
+    </div>
+
+    <div class="card note stack g10">
+      <h4>7-5. 社内で守るべき5原則</h4>
+      <ol class="small tight">
+        <li><b class="k">推定させない</b>：AIに他者の性格を推定させ、それを人事・評価・配置に使わない。例外なく。</li>
+        <li><b class="k">自己申告に留める</b>：AIに自分の好みを伝えるのは本人の申告（「私は結論から知りたい」）であり、AIによる推定ではない。<b class="k">この2つを混同しない。</b></li>
+        <li><b class="k">本人が編集・削除できる</b>：AIが保持する「あなたの傾向」の記録は、本人がいつでも確認・修正・消去できること。</li>
+        <li><b class="k">推定を根拠にしない</b>：AIの示す人物像は仮説であり、意思決定の根拠にはできない。</li>
+        <li><b class="k">越境させない</b>：ある目的で得た傾向情報を、別の目的（採用、営業、監督）に転用しない。</li>
+      </ol>
+    </div>
+
+  </div>
+</section>
+
+<section id="s8">
+  <div class="sec-head"><span class="sec-num">08</span><h2>パーソナライズAI ― 個人差が業務成果に変わるまで</h2></div>
+  <p class="sec-msg">性格を知ることが目的ではない。<b class="k">性格 → 利用パターン → AIの応答設計 → 成果</b>という連鎖をつなげて初めて意味を持つ。</p>
+
+  <div class="stack g28" style="margin-top:24px">
+
+    <div>
+      <h3>8-1. パーソナライズの流れ</h3>
+      <div class="flow" style="margin-top:14px">
+        <div class="flow-step" style="border-left:3px solid var(--human)"><span class="flow-k">01</span><div><b class="k">ユーザー</b><br><span class="small muted">職務・経験・目的を持った一人の人間。ここを起点にする（ツールを起点にしない）。</span></div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step" style="border-left:3px solid var(--human)"><span class="flow-k">02</span><div><b class="k">性格・行動傾向</b><br><span class="small muted">MBTI（自己理解の言語）＋ Big Five（研究知見）＋ 実際の行動観察。<b class="k">推定ではなく自己申告と観察で把握する</b>（第7章）。</span></div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step" style="border-left:3px solid var(--ai)"><span class="flow-k">03</span><div><b class="k">AIとの利用パターン</b><br><span class="small muted">往復回数、依頼の粒度、検証の有無、任せる範囲、使う時間帯。<b class="k">ここが実測できる唯一の層</b>であり、施策の起点になる。</span></div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step" style="border-left:3px solid var(--ai)"><span class="flow-k">04</span><div><b class="k">AIが最適な回答形式を選択</b><br><span class="small muted">第6章の7パラメータ（役割・話し方・質問量・情報量・FBの強さ・意思決定支援・不確実性の扱い）を設定する。カスタム指示、プロジェクト設定、社内GPT等で実装。</span></div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step" style="border-left:3px solid var(--ok)"><span class="flow-k">05</span><div><b class="k">個人に適したAI活用</b><br><span class="small muted">「使える」から「自分のやり方で使える」へ。継続利用の鍵（第3章：パーソナライゼーション → 信頼 → 継続利用）。</span></div></div>
+        <div class="flow-arrow"></div>
+        <div class="flow-step" style="border-left:3px solid var(--ok); background:var(--ok-bg)"><span class="flow-k">06</span><div><b class="k">業務成果向上</b><br><span class="small muted">時間短縮だけでなく、判断の質・成果物の質・意思決定の速度。<b class="k">測定指標を先に決めること</b>（決めていない施策は必ず「なんとなく便利」で終わります）。</span></div></div>
+      </div>
+      <p class="small" style="margin-top:14px"><span class="chip lim">限界</span> この流れは<b class="k">設計モデルであり、実証された因果連鎖ではありません</b>。特に02→03の間には大きな個人差があり、性格から利用パターンを予測する精度は高くありません（第3章の不一致を参照）。<b class="k">実務では02を飛ばして03から始めても構いません</b>――むしろそのほうが確実です。</p>
+    </div>
+
+    <div>
+      <h3>8-2. 具体例</h3>
+      <div class="tw" style="margin-top:14px"><table>
+        <thead><tr><th style="width:14%">人物</th><th style="width:20%">観察された利用パターン</th><th style="width:16%">つまずき</th><th style="width:26%">AI側の調整</th><th style="width:24%">起きた変化（想定）</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b class="k">Aさん</b><br><span class="xsmall">法人営業・7年目<br>対話志向が強い</span></td>
+            <td>音声で長く話し、AIと盛り上がるが、会話が資料に変換されない</td>
+            <td>発散して<b class="k">成果物が残らない</b></td>
+            <td>「毎回の最後に、決定事項・未決事項・次アクションを表形式で出力」を固定指示に追加。壁打ち用と納品用のスレッドを分離</td>
+            <td>商談準備の時間が短縮。会話が提案書の素材として蓄積されるように</td>
+          </tr>
+          <tr>
+            <td><b class="k">Bさん</b><br><span class="xsmall">経理・15年目<br>正確性志向が強い</span></td>
+            <td>AIの誤りを一度経験して以来、ほぼ使っていない</td>
+            <td><b class="k">不正確さを理由に不使用</b>（AI回避）</td>
+            <td>「確認できない情報は［未確認］と明記」を全プロンプトに標準化。用途を<b class="k">検算・照合・チェックリスト生成</b>（誤りが検出可能な領域）に限定</td>
+            <td>「AIの誤りを見つける」という役割が本人の強みと一致し、利用が定着</td>
+          </tr>
+          <tr>
+            <td><b class="k">Cさん</b><br><span class="xsmall">企画・3年目<br>発想志向が強い</span></td>
+            <td>アイデア出しは活発。企画書の完成率が低い</td>
+            <td>探索が終わらない</td>
+            <td>発散フェーズと収束フェーズで別のAI人格を使い分け（②壁打ち型 → ③業務管理型）。収束側には「新提案禁止」を明記</td>
+            <td>企画の着手数は減ったが、完成・提出数が増加</td>
+          </tr>
+          <tr>
+            <td><b class="k">Dさん</b><br><span class="xsmall">課長・管理職<br>配慮志向が強い</span></td>
+            <td>AIの提案をほぼそのまま採用。修正指示が少ない</td>
+            <td><b class="k">AIに反論しない</b>（誤りが素通り）</td>
+            <td>「あなた自身が今の回答を批判してください」を定型化。AIに反論役を担わせ、本人が否定する心理的コストを回避</td>
+            <td>1on1メモの質が向上。AI出力の誤りを指摘できるように</td>
+          </tr>
+          <tr>
+            <td><b class="k">Eさん</b><br><span class="xsmall">エンジニア・10年目<br>効率志向が強い</span></td>
+            <td>短い指示で高速に使う。文脈を渡さない</td>
+            <td>精度が上がらず「使えない」と評価</td>
+            <td>プロジェクト単位で前提（技術構成・制約・コード規約）を常設。毎回書かなくてよい状態にする</td>
+            <td>短い指示のまま精度が向上。<b class="k">本人の使い方を変えずに環境側を変えた例</b></td>
+          </tr>
+        </tbody>
+        <caption><span class="chip hy">仮説</span> 上記は研修で用いる<b>構成された事例</b>であり、特定の実在人物の記録ではありません。「変化」欄は想定される結果であって、測定値ではありません。</caption>
+      </table></div>
+      <p class="small" style="margin-top:12px"><b class="k">Eさんの例が示す原則：</b>パーソナライズとは「人を変えること」ではありません。<b class="k">その人の自然なやり方のまま成果が出るように、環境側を調整すること</b>です。研修で行動変容を求めるより、設定を配るほうが定着します。</p>
+    </div>
+
+  </div>
+</section>
+
+<section id="s9">
+  <div class="sec-head"><span class="sec-num">09</span><h2>AI活用における「人間側の弱点」</h2></div>
+  <p class="sec-msg">AI活用の失敗の多くは、AIの性能不足ではなく<b class="k">人間側の認知の癖</b>から起きる。ここは性格に関係なく、全員に該当する。</p>
+
+  <div class="stack g28" style="margin-top:24px">
+
+    <div class="card ev stack g12">
+      <div class="pill-row"><span class="chip ev">研究</span><span class="chip lim">因果は未確定</span></div>
+      <h4>認知のアウトソーシングに関する主要研究</h4>
+      <div class="tw"><table>
+        <thead><tr><th style="width:20%">研究者／機関・年</th><th style="width:26%">研究内容</th><th style="width:28%">何が分かったのか</th><th style="width:26%">この資料での活用</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b class="k">Michael Gerlich</b>（SBS Swiss Business School）<br>2025年／Societies 15(1), 6</td>
+            <td>666名を対象に、AIツールの利用頻度・認知のオフロード・批判的思考を調査（質問紙＋インタビューの混合法）</td>
+            <td>AI利用頻度と批判的思考スコアの間に<b class="k">強い負の相関（r = −0.68, p &lt; .001）</b>。認知のオフロードが媒介変数として機能。著者はこれを「認知的怠惰」と呼ぶ</td>
+            <td>「使えば使うほど楽になる」の裏側を示す。<b class="k">ただし相関研究であり、「AIが思考力を下げた」とは言えない</b>（元々批判的思考の低い人がAIを多用している可能性）。2025年に訂正が公表されている点も併せて共有すること</td>
+          </tr>
+          <tr>
+            <td><b class="k">Nataliya Kosmyna ほか</b>（MIT Media Lab）<br>2025年／arXiv:2506.08872</td>
+            <td>54名を「LLM使用」「検索エンジン使用」「支援なし」の3群に分け、小論文執筆中の脳活動をEEG（32領域）で計測。のちに支援なしで同課題を実施</td>
+            <td>LLM群は<b class="k">脳の結合性が最も弱く</b>、記憶の定着と「自分が書いた」という所有感が低下。支援を外した後の成績も低下。著者はこれを<b class="k">「認知的負債（cognitive debt）」</b>と呼ぶ</td>
+            <td>「AIに書かせた文章は、自分の中に残らない」ことの神経科学的な傍証。<b class="k">学習・育成の文脈では、AIの使い方を意図的に制限する理由になる</b></td>
+          </tr>
+          <tr>
+            <td><b class="k">OpenAI &amp; MIT Media Lab</b><br>2025年3月</td>
+            <td>①400万件超のChatGPT対話の分析と利用者4,076名への調査、②4週間のランダム化比較試験（n=981、30万件超のメッセージ）</td>
+            <td>日次利用量が多いほど<b class="k">孤独感・情緒的依存・問題的利用が高く、対人交流が低い</b>という相関。愛着傾向の強い人ほど孤独感が高く、チャットボットへの信頼が高い人ほど情緒的依存が強かった。一方、実験条件による有意な効果は検出されなかった</td>
+            <td>AI依存は「意志の弱さ」ではなく<b class="k">利用量と関係性の設計の問題</b>として扱う。特に対話型の使い方が中心の人には、利用の設計が必要</td>
+          </tr>
+        </tbody>
+      </table></div>
+      <p class="xsmall"><span class="chip lim">限界</span> 3研究とも<b class="k">相関または短期実験</b>であり、長期的な因果は確立していません。「AIは人を馬鹿にする」という単純化した引用は避けてください。正しい要約は<b class="k">「思考を委ねる使い方を続けると、その領域の能力は使われなくなる可能性が高い」</b>です。</p>
+    </div>
+
+    <div>
+      <h3>9-1. 7つの落とし穴と、その見分け方</h3>
+      <div class="tw" style="margin-top:14px"><table>
+        <thead><tr><th style="width:16%">落とし穴</th><th style="width:30%">現れ方（自覚できるサイン）</th><th style="width:28%">なぜ起きるか</th><th style="width:26%">対処</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">過信</b></td><td>出力を読み返さずコピーしている。出典を確認しない</td><td>流暢さと正確さを混同する（AIの文章は「自信あり」に見える）</td><td>数字・固有名詞・日付・引用は<b class="k">必ず一次情報で確認</b>するルール化</td></tr>
+          <tr><td><b class="k">依存</b></td><td>AIなしで始められない。白紙が怖い</td><td>着手の負荷をAIが肩代わりし続けた結果</td><td>週1回「AI不使用で書き出す」時間を設ける</td></tr>
+          <tr><td><b class="k">丸投げ</b></td><td>判断そのものを聞いている（「どうすべき？」で終わる）</td><td>不確実性を引き受けたくない</td><td>「選択肢と判断基準」を求め、<b class="k">選ぶのは自分</b>と決める</td></tr>
+          <tr><td><b class="k">思考停止</b></td><td>最初の回答で満足する。往復が1回で終わる</td><td>もっともらしい答えは疑問を消してしまう</td><td>「反論を書かせる」を標準工程に入れる</td></tr>
+          <tr><td><b class="k">検証不足</b></td><td>「たぶん合っている」で提出する</td><td>検証コストが体感的に高い</td><td>検証が必要な箇所をAI自身に列挙させる</td></tr>
+          <tr><td><b class="k">意見の消失</b></td><td>自分の考えを言う前にAIに聞く</td><td>AIの整った表現に自分の粗い考えが負ける</td><td><b class="k">先に自分の案を書いてからAIに見せる</b>順序を固定</td></tr>
+          <tr><td><b class="k">同調</b></td><td>AIが同意すると安心して終える</td><td>AIは対話を成立させる方向に応答しやすい</td><td>「あなたの回答を自分で批判して」を定型化</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div>
+      <h3>9-2.「AIを使う能力」と「AIに考えてもらう能力」は違う</h3>
+      <div class="grid g2" style="margin-top:14px">
+        <div class="card flat stack g10" style="border-left:3px solid var(--ok)">
+          <h4 style="color:var(--ok)">AIを使う能力（伸ばすべき）</h4>
+          <ul class="small tight">
+            <li>目的とタスクを自分で定義できる</li>
+            <li>前提・制約・評価基準を言語化して渡せる</li>
+            <li>出力の<b class="k">どこが確からしく、どこが怪しいか</b>を判別できる</li>
+            <li>AIに反論させ、それを評価できる</li>
+            <li>任せる範囲と任せない範囲を自分で線引きできる</li>
+            <li>最終的な判断と責任を引き受けている</li>
+          </ul>
+          <p class="xsmall"><b class="k">この能力は、自分の意見を持っていないと機能しません。</b>AIの出力を評価するには、評価軸が自分の中に必要だからです。</p>
+        </div>
+        <div class="card flat stack g10" style="border-left:3px solid var(--warn)">
+          <h4 style="color:var(--warn)">AIに考えてもらう能力（伸ばしても行き止まり）</h4>
+          <ul class="small tight">
+            <li>質問すれば答えが返ってくる</li>
+            <li>出力を整形して提出できる</li>
+            <li>プロンプトの言い回しを覚えている</li>
+            <li>判断をAIに委ねる（「AIがこう言ったので」）</li>
+            <li>検証は「なんとなく正しそう」で済ませる</li>
+          </ul>
+          <p class="xsmall">短期的には速い。しかし<b class="k">成果の上限がAIの平均的な出力に固定され</b>、判断力は使われないまま鈍ります（Kosmyna et al. 2025 の「認知的負債」）。</p>
+        </div>
+      </div>
+      <div class="card note small" style="margin-top:16px"><b class="k">研修での一言：</b>「AIに考えてもらうと、あなたはAIの平均に近づきます。AIを使うと、あなたはあなたのまま速くなります。<b class="k">どちらを選ぶかは、毎回のプロンプトで決まっています。</b>」</div>
+    </div>
+
+    <div class="card note stack g10">
+      <h4>9-3. 検証プロトコル ― 3段階だけ</h4>
+      <div class="grid g3">
+        <div class="stack g8"><h4 style="color:var(--ai)">① 分離</h4><p class="small">出力を「事実」「推論」「提案」に分ける。<b class="k">事実だけが検証対象</b>。AIに分離させてよい。</p></div>
+        <div class="stack g8"><h4 style="color:var(--ai)">② 照合</h4><p class="small">数字・固有名詞・日付・引用・法令は<b class="k">一次情報で確認</b>。AIの再確認は検証にならない（同じ誤りを繰り返す）。</p></div>
+        <div class="stack g8"><h4 style="color:var(--ai)">③ 反証</h4><p class="small">「この結論が間違っているとしたら、どこか」をAIに書かせ、<b class="k">自分で評価する</b>。ここは人間の仕事。</p></div>
+      </div>
+      <p class="xsmall">所要3分。対外提出物・数値を含む資料・法令に触れる内容では例外なく実施してください。</p>
+    </div>
+
+  </div>
+</section>
+
+<section id="s10">
+  <div class="sec-head"><span class="sec-num">10</span><h2>AIリテラシーとの組み合わせ ― 6層モデル</h2></div>
+  <p class="sec-msg">MBTIは<b class="k">最下層の入口</b>にすぎない。上に5つの層を積んで初めて、個人差の理解が業務成果につながる。</p>
+
+  <div class="stack g16" style="margin-top:24px">
+
+    <div class="flow">
+      <div class="flow-step" style="border-left:3px solid var(--human)"><span class="flow-k">LAYER 1</span>
+        <div><b class="k">MBTI ― 性格・認知傾向の自己理解</b>
+          <div class="small muted" style="margin-top:4px">
+            <b class="k">問い：</b>私はどういう進め方が自然か／どこで疲れるか<br>
+            <b class="k">成果物：</b>自分の4軸の傾向と、AI利用時に効きそうな処方 1〜3個<br>
+            <b class="k">測り方：</b>測らない。<b class="k">この層は測定ではなく対話の層</b>。ここで数値管理を始めると誤用に転落する<br>
+            <b class="k">この層の限界：</b>科学的な予測力は弱い（第2章）。共通言語としての価値に限定して使う
+          </div>
+        </div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step" style="border-left:3px solid var(--human)"><span class="flow-k">LAYER 2</span>
+        <div><b class="k">Big Five ― より科学的な性格特性の理解</b>
+          <div class="small muted" style="margin-top:4px">
+            <b class="k">問い：</b>研究知見に照らすと、私はどこでつまずきやすいか<br>
+            <b class="k">成果物：</b>5因子の自己認識と、リスクの自覚（特に<b class="k">神経症傾向と協調性</b>――MBTIでは見えない／薄い領域）<br>
+            <b class="k">測り方：</b>妥当性の確認された尺度（BFI-2、IPIPなど）。<b class="k">研究・自己理解目的に限定し、人事利用はしない</b><br>
+            <b class="k">なぜ必要か：</b>AI利用に関する研究知見はすべてBig Fiveで記述されている。MBTIだけでは研究とつながらない
+          </div>
+        </div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step" style="border-left:3px solid var(--ai)"><span class="flow-k">LAYER 3</span>
+        <div><b class="k">AIリテラシー ― AIの能力と限界を理解する</b>
+          <div class="small muted" style="margin-top:4px">
+            <b class="k">問い：</b>このAIは何ができて、何ができないのか。なぜ間違えるのか<br>
+            <b class="k">成果物：</b>ハルシネーションの発生条件、学習データの時点、確率的生成の性質、機密情報の扱い、著作権・法規制の基礎<br>
+            <b class="k">測り方：</b>MAILS（Meta AI Literacy Scale）等の自己報告尺度、AICOS（2025）等の客観テスト。<b class="k">自己報告は過大評価されやすい</b>ため、実技課題との併用を推奨<br>
+            <b class="k">この層が抜けると：</b>下2層をどれだけ理解しても、過信か回避のどちらかに落ちる
+          </div>
+        </div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step" style="border-left:3px solid var(--ai)"><span class="flow-k">LAYER 4</span>
+        <div><b class="k">プロンプト ― AIとのコミュニケーション</b>
+          <div class="small muted" style="margin-top:4px">
+            <b class="k">問い：</b>頭の中の文脈を、どこまで言語化して渡せるか<br>
+            <b class="k">成果物：</b>目的・前提・制約・評価基準・出力形式を含む指示。反証を求める工程。往復による精緻化<br>
+            <b class="k">測り方：</b>同一課題での成果物比較（研修前後）。プロンプトの長さではなく<b class="k">往復回数と修正指示の具体性</b>を見る<br>
+            <b class="k">ここで層1・2が効く：</b>「自分は文脈を省略しがち」「自分は反論を求めない」という自己理解が、改善点を特定する
+          </div>
+        </div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step" style="border-left:3px solid var(--ok)"><span class="flow-k">LAYER 5</span>
+        <div><b class="k">パーソナライズ ― 自分に合うAIへ調整する</b>
+          <div class="small muted" style="margin-top:4px">
+            <b class="k">問い：</b>毎回書かなくて済むように、何を常設すべきか<br>
+            <b class="k">成果物：</b>カスタム指示／プロジェクト設定／社内アシスタントの役割定義（第6章の7パラメータ）<br>
+            <b class="k">測り方：</b>継続利用率、1週間あたりの利用場面数、「自分用の設定を持っている人」の割合<br>
+            <b class="k">研究的根拠：</b>パーソナライゼーション → 信頼 → 継続利用の経路（第3章）
+          </div>
+        </div></div>
+      <div class="flow-arrow"></div>
+      <div class="flow-step" style="border-left:3px solid var(--ok); background:var(--ok-bg)"><span class="flow-k">LAYER 6</span>
+        <div><b class="k">AIエージェント ― 仕事の仕組みに組み込む</b>
+          <div class="small muted" style="margin-top:4px">
+            <b class="k">問い：</b>個人の使い方を、どうチーム・業務プロセスの資産に変えるか<br>
+            <b class="k">成果物：</b>定型業務の自動化、標準プロンプト集、チェック工程の組み込み、責任の所在の明確化<br>
+            <b class="k">測り方：</b>業務あたり時間、手戻り率、品質指標。<b class="k">個人の満足度ではなく業務指標で測る層</b><br>
+            <b class="k">注意：</b>この層でこそ第9章の検証プロトコルが不可欠。自動化された誤りは、気づかれずに繰り返される
+          </div>
+        </div></div>
+    </div>
+
+    <div class="card note stack g10">
+      <h4>この積み上げが意味すること</h4>
+      <div class="grid g3">
+        <div class="stack g8"><h4 style="color:var(--warn)">層1だけで止まると</h4><p class="small">「面白い性格診断研修」で終わる。<b class="k">業務は何も変わらない。</b>最も多い失敗。</p></div>
+        <div class="stack g8"><h4 style="color:var(--warn)">層3・4だけだと</h4><p class="small">一般的なプロンプト研修。<b class="k">「分かったが自分は使わない」層が残る</b>。個人差が扱われていないため。</p></div>
+        <div class="stack g8"><h4 style="color:var(--ok)">全層をつなぐと</h4><p class="small">自己理解が<b class="k">設定という具体物</b>に変換され、業務プロセスに残る。人が入れ替わっても資産が残る。</p></div>
+      </div>
+      <p class="small"><b class="k">重要：</b>層1・2は<b class="k">通過点であって目的地ではありません</b>。研修の成功は「自分のタイプが分かった」ではなく「<b class="k">自分用のAI設定を持ち帰った</b>」で測ってください。</p>
+    </div>
+
+  </div>
+</section>
+
+<section id="s11">
+  <div class="sec-head"><span class="sec-num">11</span><h2>職種別の活用例 ― 性格傾向 × 職種 × AI</h2></div>
+  <p class="sec-msg">同じ職種でも、傾向が違えば<b class="k">つまずく場所が違う</b>。処方は職種ではなく、職種と傾向の交点で決まる。</p>
+
+  <div class="stack g20" style="margin-top:24px">
+
+    <div class="card flat stack g12">
+      <h3>営業</h3>
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">傾向</th><th style="width:26%">AI活用の要点</th><th style="width:26%">つまずきやすい点</th><th style="width:26%">推奨する設定・処方</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">対話志向が強い（E寄り）</b></td><td>商談ロールプレイ、想定問答、その場の切り返し練習</td><td>会話が盛り上がるが記録に残らない</td><td>「毎回の最後に決定事項・次アクションを表で」を固定指示に</td></tr>
+          <tr><td><b class="k">分析志向が強い（IT寄り）</b></td><td>顧客業界の調査、提案ロジックの構築、失注要因の分析</td><td>準備が完璧になるまで動かない</td><td>「70%で出す」ルール。AIには網羅ではなく<b class="k">仮説を3つ</b>求める</td></tr>
+          <tr><td><b class="k">関係志向が強い（F寄り）</b></td><td>フォロー文面、提案書のトーン調整、関係者マップの整理</td><td>AIの文面をそのまま使い、個性が消える</td><td>「私の言葉を残し、構造だけ整える」指示。<b class="k">送信前に必ず自分で1文足す</b></td></tr>
+        </tbody>
+      </table></div>
+      <p class="xsmall"><b class="k">職種共通の注意：</b>顧客に提示する数値・実績・他社事例は、AI出力をそのまま使わないこと（第9章 検証プロトコル②）。</p>
+    </div>
+
+    <div class="card flat stack g12">
+      <h3>マーケティング</h3>
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">傾向</th><th style="width:26%">AI活用の要点</th><th style="width:26%">つまずきやすい点</th><th style="width:26%">推奨する設定・処方</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">発想志向が強い（N寄り）</b></td><td>コンセプト開発、切り口出し、ペルソナ設計、コピー案の量産</td><td>案は出るが選べない・実行に落ちない</td><td>発散と収束でAI人格を分ける（第6章②→③）。収束側に「新提案禁止」</td></tr>
+          <tr><td><b class="k">数値志向が強い（S寄り）</b></td><td>データ整理、施策の効果分析、レポート自動化</td><td>創造的な用途を試さないまま効率化に留まる</td><td>月1回、抽象タスク（コンセプト批評など）を意図的に試す時間を設ける</td></tr>
+          <tr><td><b class="k">計画志向が強い（J寄り）</b></td><td>年間計画、施策のWBS化、進行管理</td><td>初回案で確定し、探索が足りない</td><td>「案は必ず3つ。<b class="k">選ばなかった理由を書く</b>」ルール</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="card flat stack g12">
+      <h3>管理職</h3>
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">傾向</th><th style="width:26%">AI活用の要点</th><th style="width:26%">つまずきやすい点</th><th style="width:26%">推奨する設定・処方</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">配慮志向が強い（F寄り）</b></td><td>1on1準備、フィードバックの伝え方設計、チーム発信文</td><td>AIの案に反論せず採用。厳しい内容の角が取れすぎる</td><td>「厳しい事実をやわらげず3行で」＋「AI自身に批判させる」定型</td></tr>
+          <tr><td><b class="k">推進志向が強い（TJ寄り）</b></td><td>意思決定の整理、計画立案、業務標準化</td><td>AIを追認に使う（賛成材料集め）</td><td>「賛成材料は不要。失敗するとしたら原因は何か」を定型プロンプトに</td></tr>
+        </tbody>
+      </table></div>
+      <div class="card warn small"><b class="k">管理職に必ず伝えること：</b>①<b class="k">部下のMBTIを推測してマネジメントを変えない</b>。②<b class="k">AIに部下の性格や評価を推定させない</b>（第7章 5原則）。③人事評価の文面をAIに書かせる場合も、<b class="k">判断と責任は必ず人間が持つ</b>。④部下の1on1記録を外部AIに入力する前に、社内の情報取扱規程を確認する。</div>
+    </div>
+
+    <div class="card flat stack g12">
+      <h3>エンジニア</h3>
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">傾向</th><th style="width:26%">AI活用の要点</th><th style="width:26%">つまずきやすい点</th><th style="width:26%">推奨する設定・処方</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">効率志向が強い（TP寄り）</b></td><td>実装補助、デバッグ、技術調査、設計案の比較</td><td>文脈を渡さず精度が上がらない／動く仕組みを理解せず運用に乗せる</td><td>プロジェクト単位で前提を常設化。「私が理解すべき点を1つ指摘して」を追加</td></tr>
+          <tr><td><b class="k">堅実志向が強い（SJ寄り）</b></td><td>テスト設計、レビュー観点の網羅、ドキュメント整備</td><td>AIの誤りを理由に利用自体をやめる</td><td>誤りが<b class="k">検出可能な領域</b>（テスト・レビュー・照合）から入る</td></tr>
+        </tbody>
+      </table></div>
+      <p class="xsmall"><b class="k">共通：</b>生成コードの著作権・ライセンス・機密情報の扱いは、個人の判断ではなく組織のルールで決めること。</p>
+    </div>
+
+    <div class="card flat stack g12">
+      <h3>クリエイター</h3>
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">傾向</th><th style="width:26%">AI活用の要点</th><th style="width:26%">つまずきやすい点</th><th style="width:26%">推奨する設定・処方</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">感覚志向が強い（FP寄り）</b></td><td>制作意図の言語化、案出し、リファレンス整理、クライアント説明</td><td>作風が平均化する（生成AIは中央値に引き寄せる）</td><td>「一般的な言い回しに置き換えない」「私の独特な部分を先に特定して」</td></tr>
+          <tr><td><b class="k">構想志向が強い（N寄り）</b></td><td>コンセプト設計、世界観構築、構成の骨組み</td><td>構想段階が終わらない</td><td>「今日提出できる最小の成果物」を毎回定義させる</td></tr>
+        </tbody>
+      </table></div>
+      <p class="xsmall"><b class="k">原則：</b>AIは<b class="k">選択肢を増やす道具</b>であり、選ぶのは人。違和感を覚えたら、AIより自分の感覚を優先してください。</p>
+    </div>
+
+    <div class="card flat stack g12">
+      <h3>事務・バックオフィス</h3>
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">傾向</th><th style="width:26%">AI活用の要点</th><th style="width:26%">つまずきやすい点</th><th style="width:26%">推奨する設定・処方</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">正確性志向が強い（SJ寄り）</b></td><td>文書作成、照合・検算、規程整備、問い合わせ対応の整理</td><td>不正確さを理由に不使用（最も多い離脱パターン）</td><td>「確認できない情報は［未確認］と明記」を標準化。<b class="k">検算・チェック用途から入る</b></td></tr>
+          <tr><td><b class="k">支援志向が強い（F寄り）</b></td><td>社内外の連絡文、記録・引き継ぎ、配慮の要る案内文</td><td>AI案をそのまま採用し誤りが素通り</td><td>「あなた自身が今の回答を批判して」を定型化</td></tr>
+        </tbody>
+      </table></div>
+      <p class="xsmall"><b class="k">この職種の潜在価値：</b>正確性志向の人は「AIの誤りを見つける」役割で本領を発揮します。<b class="k">組織のAI品質管理者として最も適した層</b>になりえます。</p>
+    </div>
+
+    <div class="card flat stack g12">
+      <h3>経営者</h3>
+      <div class="tw"><table>
+        <thead><tr><th style="width:22%">傾向</th><th style="width:26%">AI活用の要点</th><th style="width:26%">つまずきやすい点</th><th style="width:26%">推奨する設定・処方</th></tr></thead>
+        <tbody>
+          <tr><td><b class="k">決断志向が強い（TJ寄り）</b></td><td>戦略の壁打ち、シナリオ分析、想定問答、情報の要約</td><td>AIを追認装置にする。反対意見に触れない</td><td>①戦略参謀型AI（撤退条件・反対仮説を必須化）</td></tr>
+          <tr><td><b class="k">構想志向が強い（N寄り）</b></td><td>長期構想、事業機会の探索、異業種からの類推</td><td>構想が実行に落ちない</td><td>制約付き収束プロンプト。実行責任者への翻訳をAIに担わせる</td></tr>
+        </tbody>
+      </table></div>
+      <div class="card warn small"><b class="k">経営者への最重要メッセージ：</b>AI導入の成否は、ツールの選定ではなく<b class="k">「誰が・何を・どこまで任せるか」の設計</b>で決まります（Vaccaro et al. 2024）。導入率やライセンス数をKPIにすると、第10章の層1〜2で止まった組織になります。測るべきは<b class="k">「自分用の設定を持っている人の割合」</b>と<b class="k">業務指標の変化</b>です。</div>
+    </div>
+
+  </div>
+</section>
+
+<section id="s12">
+  <div class="sec-head"><span class="sec-num">12</span><h2>最終的なAI活用モデル</h2></div>
+  <p class="sec-msg">結論。<b class="k">AIの性能を最大化するのではなく、人間とAIの相性を最大化する。</b></p>
+
+  <div class="stack g28" style="margin-top:24px">
+
+    <div class="grid g2">
+      <div class="card flat stack g10" style="border-left:3px solid var(--warn)">
+        <h4 style="color:var(--warn)">性能最大化の発想（よくある失敗）</h4>
+        <ul class="small tight">
+          <li>最新・最高性能のモデルを導入すれば成果が出る</li>
+          <li>全社共通の「正しいプロンプト集」を配れば揃う</li>
+          <li>KPIは導入率・ライセンス消化率・利用回数</li>
+          <li>使わない人は「意識が低い」</li>
+          <li>個人差は、標準化すれば消える</li>
+        </ul>
+        <p class="xsmall"><b class="k">結果：</b>導入率は上がるが業務指標は動かない。「便利だけど使っていない」層が残る。Vaccaro et al.（2024）が示した通り、<b class="k">無設計の人間＋AIは、単独より劣ることすらある</b>。</p>
+      </div>
+      <div class="card flat stack g10" style="border-left:3px solid var(--ok)">
+        <h4 style="color:var(--ok)">相性最大化の発想（この資料の提案）</h4>
+        <ul class="small tight">
+          <li>同じモデルでも、<b class="k">人ごとに設定を変える</b>ことを前提にする</li>
+          <li>共通で配るのは「正解」ではなく<b class="k">調整のつまみと選択肢</b></li>
+          <li>KPIは「自分用の設定を持つ人の割合」と業務指標</li>
+          <li>使わない人には<b class="k">理由がある</b>（不正確さへの不快感、対話コスト、用途の不一致）</li>
+          <li>個人差は、<b class="k">消すものではなく設計変数</b>として扱う</li>
+        </ul>
+        <p class="xsmall"><b class="k">根拠：</b>Ju &amp; Aral（2025）― 人間の特性とAIの応答特性の<b class="k">組み合わせ</b>が成果を左右し、最適な組み合わせは人・タスク・文化で異なる。</p>
+      </div>
+    </div>
+
+    <div class="card stack g16">
+      <h3 style="text-align:center">AI活用成果の構造</h3>
+      <div class="grid" style="grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; align-items:stretch">
+        <div class="card flat stack g8" style="text-align:center; padding:16px 12px">
+          <div class="eyebrow" style="color:var(--ai)">FACTOR 1</div><b class="k">AI性能</b>
+          <p class="xsmall">モデルの能力・ツール連携・データ接続</p>
+          <p class="xsmall" style="color:var(--ai)">ほぼ全社共通。差がつかない</p>
+        </div>
+        <div class="card flat stack g8" style="text-align:center; padding:16px 12px">
+          <div class="eyebrow" style="color:var(--human)">FACTOR 2</div><b class="k">人間の特性</b>
+          <p class="xsmall">思考の癖・対話の好み・不確実性への耐性</p>
+          <p class="xsmall" style="color:var(--human)">変えない。<b>理解して活かす</b></p>
+        </div>
+        <div class="card flat stack g8" style="text-align:center; padding:16px 12px">
+          <div class="eyebrow" style="color:var(--ai)">FACTOR 3</div><b class="k">AIリテラシー</b>
+          <p class="xsmall">能力と限界の理解・検証する力</p>
+          <p class="xsmall" style="color:var(--ai)">教育で伸ばせる</p>
+        </div>
+        <div class="card flat stack g8" style="text-align:center; padding:16px 12px">
+          <div class="eyebrow" style="color:var(--ok)">FACTOR 4</div><b class="k">業務目的</b>
+          <p class="xsmall">何のために・どの成果を上げるのか</p>
+          <p class="xsmall" style="color:var(--ok)">ここが曖昧だと全部ゼロ</p>
+        </div>
+        <div class="card flat stack g8" style="text-align:center; padding:16px 12px">
+          <div class="eyebrow" style="color:var(--ok)">FACTOR 5</div><b class="k">適切なAI設計</b>
+          <p class="xsmall">役割・応答形式・検証工程・業務への組み込み</p>
+          <p class="xsmall" style="color:var(--ok)"><b>最も投資対効果が高い</b></p>
+        </div>
+      </div>
+      <div style="text-align:center" class="stack g8">
+        <div class="thesis" style="border:none; border-top:1px solid var(--rule); padding:20px 0 0; text-align:center; font-size:clamp(15px,2.4vw,20px)">
+          AI性能 <span style="color:var(--ink-3)">×</span> 人間の特性 <span style="color:var(--ink-3)">×</span> AIリテラシー <span style="color:var(--ink-3)">×</span> 業務目的 <span style="color:var(--ink-3)">×</span> 適切なAI設計 <span style="color:var(--ink-3)">＝</span> <b>AI活用成果</b>
+        </div>
+        <p class="small muted" style="max-width:70ch; margin:0 auto"><b class="k">これは足し算ではなく掛け算です。</b>どれか一つがゼロなら、成果はゼロになります。最高性能のAIを導入しても（FACTOR 1）、業務目的が曖昧なら（FACTOR 4 = 0）成果は出ません。逆に、平凡なモデルでも他の4つが揃えば成果は出ます。<b class="k">そして多くの組織が投資しているのはFACTOR 1だけです。</b></p>
+      </div>
+    </div>
+
+    <div>
+      <h3>実装ロードマップ ― 90日</h3>
+      <div class="grid g3" style="margin-top:14px">
+        <div class="card flat stack g10">
+          <div class="eyebrow">DAY 1–30</div><h4>自己理解と初期設定</h4>
+          <ul class="small tight">
+            <li>MBTI（または4軸の自己チェック）で共通言語をつくる ※分類目的で使わないことを明示</li>
+            <li>第6章の7パラメータで<b class="k">全員が自分用のカスタム指示を作成</b></li>
+            <li>第9章の検証プロトコル（3段階）を全社ルール化</li>
+            <li>第7章の5原則を情報取扱規程に反映</li>
+          </ul>
+          <p class="xsmall"><b class="k">完了条件：</b>全員が「自分用の設定」を1つ持っている</p>
+        </div>
+        <div class="card flat stack g10">
+          <div class="eyebrow">DAY 31–60</div><h4>業務への接続</h4>
+          <ul class="small tight">
+            <li>職種別に「AIに任せる工程／人が判断する工程」を分離（第11章）</li>
+            <li>各人が<b class="k">週1業務</b>を選び、AI併用で実施・記録</li>
+            <li>うまくいかない事例を集める（<b class="k">成功例より価値がある</b>）</li>
+            <li>AIリテラシー研修（ハルシネーション、機密、著作権）</li>
+          </ul>
+          <p class="xsmall"><b class="k">完了条件：</b>職種ごとに標準プロンプトが3つ以上ある</p>
+        </div>
+        <div class="card flat stack g10">
+          <div class="eyebrow">DAY 61–90</div><h4>仕組み化と測定</h4>
+          <ul class="small tight">
+            <li>定型業務のエージェント化（検証工程を必ず組み込む）</li>
+            <li>業務指標での測定（時間・手戻り率・品質）</li>
+            <li>過信・依存の兆候を第9章の表で自己点検</li>
+            <li>設定と標準プロンプトを<b class="k">組織の資産として文書化</b></li>
+          </ul>
+          <p class="xsmall"><b class="k">完了条件：</b>個人の工夫が、担当が変わっても残る形になっている</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card note stack g12">
+      <h4>この資料が最後に伝えたいこと</h4>
+      <p class="small">MBTIは、人を16の箱に入れる道具ではありません。この資料でMBTIに与えた役割はただ一つ、<b class="k">「人によってAIとの噛み合い方が違う」という事実に、話しかけやすい言葉を与えること</b>です。その言葉を入口にして、Big Fiveの研究知見、AIリテラシー、プロンプト設計、そして業務の仕組みへとつないでいく――途中でMBTIを手放しても構いません。<b class="k">むしろ手放せたなら、この資料は役目を果たしています。</b></p>
+      <p class="small">最後にもう一度。<b class="k">AIの性能を最大化するのではなく、人間とAIの相性を最大化する。</b>性能は買えますが、相性は設計するものです。そして相性を設計できるのは、<b class="k">自分がどう考える人間なのかを知っている人</b>だけです。</p>
+    </div>
+
+  </div>
+</section>
+
+<section id="refs">
+  <div class="sec-head"><span class="sec-num">参考</span><h2>参考文献・論文・URL</h2></div>
+  <p class="sec-msg">2026年8月時点で確認した情報にもとづきます。<b class="k">研修で引用する際は、必ず一次情報にあたってください。</b></p>
+
+  <div class="stack g16" style="margin-top:24px">
+
+    <h3>性格特性・MBTIの妥当性</h3>
+    <div>
+      <div class="ref"><span class="rid">REF-01</span><div>McCrae, R. R., &amp; Costa, P. T. (1989). <b class="k">Reinterpreting the Myers-Briggs Type Indicator From the Perspective of the Five-Factor Model of Personality.</b> Journal of Personality, 57(1), 17–40. ／ MBTI4軸とBig Fiveの相関、タイプ論への否定的知見の一次資料。<br><a href="https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-6494.1989.tb00759.x">https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-6494.1989.tb00759.x</a></div></div>
+      <div class="ref"><span class="rid">REF-02</span><div>The Myers-Briggs Company. <b class="k">MBTI Validity and Reliability.</b> ／ 提供側による信頼性・妥当性の主張（内的整合性約.90、15週までの再検査相関.80超）。批判側と<b class="k">両論併記</b>のために参照。<br><a href="https://www.myersbriggs.org/research-and-library/validity-reliability/">https://www.myersbriggs.org/research-and-library/validity-reliability/</a></div></div>
+      <div class="ref"><span class="rid">REF-03</span><div>日本MBTI協会. <b class="k">16Personalities性格診断テストを「MBTI®」だと思って受けられた方へ.</b> ／ 公式MBTIと16Personalitiesの違い、適性・相性診断としての誤用への注意喚起。日本で研修を行う場合の必読資料。<br><a href="https://www.mbti.or.jp/attention/">https://www.mbti.or.jp/attention/</a> ／ <a href="https://www.mbti.or.jp/discussion/06">https://www.mbti.or.jp/discussion/06</a></div></div>
+      <div class="ref"><span class="rid">REF-04</span><div>Capraro, R. M., &amp; Capraro, M. M. (2002). <b class="k">Myers-Briggs Type Indicator score reliability across studies: A meta-analytic reliability generalization study.</b> Educational and Psychological Measurement. ／ 再検査信頼性を支持する側のメタ分析。REF-02の根拠として引用されることが多い。</div></div>
+    </div>
+
+    <h3>性格特性とAI利用・協働</h3>
+    <div>
+      <div class="ref"><span class="rid">REF-05</span><div>Ju, H., &amp; Aral, S. (2025). <b class="k">Personality Pairing Improves Human-AI Collaboration.</b> arXiv:2511.13979（MIT、事前登録済みランダム化実験、n=1,258／広告7,266本／評価者1,995名／約500万インプレッション）。<span class="chip lim">プレプリント</span><br><a href="https://arxiv.org/abs/2511.13979">https://arxiv.org/abs/2511.13979</a></div></div>
+      <div class="ref"><span class="rid">REF-06</span><div>Vaccaro, M., Almaatouq, A., &amp; Malone, T. (2024). <b class="k">When combinations of humans and AI are useful: A systematic review and meta-analysis.</b> Nature Human Behaviour, 8, 2293–2303（106研究・370効果量）。<br><a href="https://www.nature.com/articles/s41562-024-02024-1">https://www.nature.com/articles/s41562-024-02024-1</a></div></div>
+      <div class="ref"><span class="rid">REF-07</span><div>Kovbasiuk, A., Triantoro, T., Przegalińska, A., Sowa, K., Ciechanowski, L., &amp; Gloor, P. (2025). <b class="k">The personality profile of early generative AI adopters: a big five perspective.</b> Central European Management Journal, 33(2), 252–264（n=62 パイロット研究）。<br><a href="https://www.emerald.com/cemj/article/33/2/252/1248924/The-personality-profile-of-early-generative-AI">https://www.emerald.com/cemj/article/33/2/252/1248924/</a></div></div>
+      <div class="ref"><span class="rid">REF-08</span><div><b class="k">Personality profiles and usage experience are associated with trust and dependence on generative AI: a latent profile analysis.</b> Frontiers in Psychology (2026), 10.3389/fpsyg.2026.1810554.<br><a href="https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2026.1810554/full">https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2026.1810554/full</a></div></div>
+      <div class="ref"><span class="rid">REF-09</span><div><b class="k">Is AI a good fit? The impact of personality on generative AI collaboration and enjoyment.</b> International Journal of Human-Computer Studies (2026).<br><a href="https://www.sciencedirect.com/science/article/abs/pii/S1071581926000224">https://www.sciencedirect.com/science/article/abs/pii/S1071581926000224</a></div></div>
+      <div class="ref"><span class="rid">REF-10</span><div><b class="k">Trust in machines: how personality traits shape static and dynamic trust across different human–machine interaction modalities.</b> Frontiers in Psychology (2025), 16:1539054.<br><a href="https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1539054/full">https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2025.1539054/full</a></div></div>
+      <div class="ref"><span class="rid">REF-11</span><div><b class="k">Trust in the machine: How contextual factors and personality traits shape algorithm aversion and collaboration.</b> ScienceDirect (2024).<br><a href="https://www.sciencedirect.com/science/article/pii/S2451958824002112">https://www.sciencedirect.com/science/article/pii/S2451958824002112</a></div></div>
+      <div class="ref"><span class="rid">REF-12</span><div><b class="k">The Type to Listen to the Machine? The Effect of Personality on the Use of AI Advice.</b> Springer (2025). ／ <b class="k">REF-10・11と逆向きの結果</b>を報告。第3章の「不一致」の根拠。<br><a href="https://link.springer.com/chapter/10.1007/978-3-031-80119-8_10">https://link.springer.com/chapter/10.1007/978-3-031-80119-8_10</a></div></div>
+      <div class="ref"><span class="rid">REF-13</span><div>Kim, B., &amp; Kim, D. (2026). <b class="k">Understanding the Role of Trust, Perceived Risk, and Habit in Organization Members' Generative AI Use.</b> SAGE Open.<br><a href="https://journals.sagepub.com/doi/10.1177/21582440251410620">https://journals.sagepub.com/doi/10.1177/21582440251410620</a></div></div>
+    </div>
+
+    <h3>LLMによる性格推定</h3>
+    <div>
+      <div class="ref"><span class="rid">REF-14</span><div>Zhu, Jin, et al. (2025). <b class="k">Can LLMs Infer Personality from Real-World Conversations?</b> arXiv:2507.14355（555件の半構造化インタビュー／BFI-10／GPT-4.1 Mini・Meta-LLaMA・DeepSeek。<b class="k">最大 r = 0.27、κ &lt; 0.10</b>）。<span class="chip lim">プレプリント</span><br><a href="https://arxiv.org/abs/2507.14355">https://arxiv.org/abs/2507.14355</a></div></div>
+      <div class="ref"><span class="rid">REF-15</span><div>Peters, H., &amp; Matz, S. (2024). <b class="k">Large Language Models Can Infer Personality from Free-Form User Interactions.</b> arXiv:2405.13052 ／ REF-14と対照的に肯定的な結果。両論併記のため必ずセットで参照。<span class="chip lim">プレプリント</span><br><a href="https://arxiv.org/abs/2405.13052">https://arxiv.org/abs/2405.13052</a></div></div>
+    </div>
+
+    <h3>認知への影響・依存</h3>
+    <div>
+      <div class="ref"><span class="rid">REF-16</span><div>Gerlich, M. (2025). <b class="k">AI Tools in Society: Impacts on Cognitive Offloading and the Future of Critical Thinking.</b> Societies, 15(1), 6（n=666、r = −0.68）。<b class="k">相関研究であり因果は示していない</b>点、および2025年に訂正が公表されている点に注意。<br><a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5082524">https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5082524</a></div></div>
+      <div class="ref"><span class="rid">REF-17</span><div>Kosmyna, N., et al. (2025). <b class="k">Your Brain on ChatGPT: Accumulation of Cognitive Debt when Using an AI Assistant for Essay Writing Task.</b> MIT Media Lab, arXiv:2506.08872（n=54、EEG 32領域）。<span class="chip lim">プレプリント・小規模</span><br><a href="https://arxiv.org/abs/2506.08872">https://arxiv.org/abs/2506.08872</a> ／ <a href="https://www.media.mit.edu/publications/your-brain-on-chatgpt/">https://www.media.mit.edu/publications/your-brain-on-chatgpt/</a></div></div>
+      <div class="ref"><span class="rid">REF-18</span><div>OpenAI &amp; MIT Media Lab (2025). <b class="k">Investigating Affective Use and Emotional Well-being on ChatGPT</b> ／ <b class="k">How AI and Human Behaviors Shape Psychosocial Effects of Extended Chatbot Use: A Longitudinal Randomized Controlled Study</b>（400万件超の対話分析＋n=981のRCT、arXiv:2503.17473）。<br><a href="https://openai.com/index/affective-use-study/">https://openai.com/index/affective-use-study/</a> ／ <a href="https://www.media.mit.edu/publications/how-ai-and-human-behaviors-shape-psychosocial-effects-of-chatbot-use-a-longitudinal-controlled-study/">MIT Media Lab 公開ページ</a></div></div>
+    </div>
+
+    <h3>AIリテラシーの測定</h3>
+    <div>
+      <div class="ref"><span class="rid">REF-19</span><div><b class="k">Meta AI Literacy Scale (MAILS): Further validation and development of a short version.</b> (2024) ／ 「AIを知る・使う・見抜く・評価する・倫理」の5領域。<br><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11544068/">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11544068/</a></div></div>
+      <div class="ref"><span class="rid">REF-20</span><div><b class="k">Objective Measurement of AI Literacy: Development and Validation of the AI Competency Objective Scale (AICOS).</b> arXiv:2503.12921 (2025) ／ 自己報告ではなく<b class="k">客観テスト型</b>の尺度。研修効果測定に有用。<br><a href="https://arxiv.org/abs/2503.12921">https://arxiv.org/abs/2503.12921</a></div></div>
+    </div>
+
+    <h3>法規制・ガバナンス</h3>
+    <div>
+      <div class="ref"><span class="rid">REF-21</span><div>Future of Privacy Forum. <b class="k">Red Lines under EU AI Act: Unpacking the prohibition of emotion recognition in the workplace and education institutions.</b> ／ 第5条の職場における感情推定AI禁止（2025年2月2日適用）の解説。<br><a href="https://fpf.org/blog/red-lines-under-eu-ai-act-unpacking-the-prohibition-of-emotion-recognition-in-the-workplace-and-education-institutions/">https://fpf.org/blog/red-lines-under-eu-ai-act-…</a></div></div>
+      <div class="ref"><span class="rid">REF-22</span><div>European Commission. <b class="k">Guidelines on Prohibited AI Practices under the EU AI Act</b>（解説：Covington “Inside Privacy”）／ 第5条(1)(c)の人格特性にもとづく評価・分類の禁止を含む。<br><a href="https://www.insideprivacy.com/artificial-intelligence/european-commission-guidelines-on-prohibited-ai-practices-under-the-eu-artificial-intelligence-act/">https://www.insideprivacy.com/artificial-intelligence/…</a></div></div>
+    </div>
+
+    <h3>普及状況の統計</h3>
+    <div>
+      <div class="ref"><span class="rid">REF-23</span><div>Anthropic. <b class="k">Anthropic Economic Index</b>（2026年3月報告「Learning curves」／6月報告「Cadences」）／ 拡張と自動化の比率、職務タスクへの浸透。<br><a href="https://www.anthropic.com/research/economic-index-march-2026-report">https://www.anthropic.com/research/economic-index-march-2026-report</a> ／ <a href="https://www.anthropic.com/research/economic-index-june-2026-report">https://www.anthropic.com/research/economic-index-june-2026-report</a></div></div>
+      <div class="ref"><span class="rid">REF-24</span><div>Gallup（2026年2月、米国被雇用者 約24,000名）／ Stanford HAI <b class="k">AI Index</b>。<span class="chip lim">本資料では二次情報経由で確認</span> 数値を引用する場合は<b class="k">必ず一次発表元（Gallup / Stanford HAI）で設問文と対象を確認してください</b>。<br><a href="https://www.gallup.com/">https://www.gallup.com/</a> ／ <a href="https://aiindex.stanford.edu/report/">https://aiindex.stanford.edu/report/</a></div></div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="stack g12">
+    <p><b class="k" style="color:var(--ink)">免責・利用上の注意</b></p>
+    <p>・本資料はAI活用研修およびコンサルティングでの使用を目的とした教材であり、心理学的アセスメント、医学的助言、法的助言のいずれでもありません。</p>
+    <p>・MBTI®およびMyers-Briggs Type Indicator®は The Myers-Briggs Company の登録商標です。公式MBTIの実施には有資格者によるフィードバックが必要です。本資料は公式MBTIの実施・解釈を代替するものではありません。</p>
+    <p>・第4章・第5章・第6章の活用モデル、第8章の事例は<b class="k">実務上の仮説および構成された事例</b>であり、実証研究の結果ではありません。</p>
+    <p>・引用した研究には査読前のプレプリント、小規模研究、相関研究が含まれます。各記述の<span class="chip lim">限界</span>表示を必ず併せて提示してください。</p>
+    <p>・法規制に関する記述は2026年8月時点の一般的な整理であり、個別の適用については専門家の確認を受けてください。</p>
+    <p style="margin-top:12px">最終更新：2026年8月　／　構成：全12章＋参考文献24件</p>
+  </div>
+</footer>
+
+</div>
