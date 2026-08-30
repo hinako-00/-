@@ -5,4 +5,4 @@ compatibility_date = "2024-11-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "bulletin_board_db"
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_id = "3b2e3cee-e8f4-4f3d-a2ac-8e5ea340d459"
